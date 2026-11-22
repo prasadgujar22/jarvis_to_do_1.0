@@ -2,7 +2,7 @@ import { useCallback } from 'react';
 import { arrayMove } from '@dnd-kit/sortable';
 import type { Task, TaskDraft, TaskPatch, UndoEntry } from '../types';
 import { STORAGE_KEYS } from '../lib/storage';
-import { createTask, sanitizeTasks } from '../lib/tasks';
+import { createTask, normalizeNotes, sanitizeTasks } from '../lib/tasks';
 import { usePersistentState } from './usePersistentState';
 
 const EMPTY: Task[] = [];
@@ -22,7 +22,8 @@ export function useTasks() {
 
   const updateTask = useCallback(
     (id: string, patch: TaskPatch) => {
-      setTasks((prev) => prev.map((t) => (t.id === id ? { ...t, ...patch } : t)));
+      const next = patch.notes === undefined ? patch : { ...patch, notes: normalizeNotes(patch.notes) };
+      setTasks((prev) => prev.map((t) => (t.id === id ? { ...t, ...next } : t)));
     },
     [setTasks],
   );

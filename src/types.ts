@@ -13,12 +13,14 @@ export interface Task {
   tags: string[];
   /** Local calendar date in ISO format (YYYY-MM-DD), or null when there is no due date. */
   dueDate: string | null;
+  /** Optional free-form multiline note; "" when there is none. Trimmed, at most MAX_NOTES_LENGTH chars. */
+  notes: string;
   createdAt: number;
   completedAt: number | null;
 }
 
 /** The user-editable fields of a task. */
-export type TaskDraft = Pick<Task, 'title' | 'priority' | 'tags' | 'dueDate'>;
+export type TaskDraft = Pick<Task, 'title' | 'priority' | 'tags' | 'dueDate'> & { notes?: string };
 
 export type TaskPatch = Partial<TaskDraft>;
 

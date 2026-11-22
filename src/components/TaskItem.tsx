@@ -1,13 +1,14 @@
-import { memo, type CSSProperties, type ReactNode } from 'react';
+import { memo, useState, type CSSProperties, type ReactNode } from 'react';
 import { m, useIsPresent, type Variants } from 'motion/react';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { CalendarDays, GripVertical, Pencil, Trash2 } from 'lucide-react';
+import { CalendarDays, ChevronDown, GripVertical, Pencil, StickyNote, Trash2 } from 'lucide-react';
 import type { Task, TaskPatch } from '../types';
 import { PRIORITY_META } from '../lib/tasks';
 import { describeDue } from '../lib/date';
 import { cn } from '../lib/cn';
 import { TaskEditor } from './TaskEditor';
+import { NoteText } from './NoteText';
 
 export interface TaskItemHandlers {
   onToggle: (id: string) => void;
@@ -153,6 +154,10 @@ const TaskBody = memo(function TaskBody({
   const priority = PRIORITY_META[task.priority];
   const due = task.dueDate ? describeDue(task.dueDate) : null;
   const dueTone = task.completed ? 'done' : (due?.tone ?? 'later');
+  // In-memory only: whether the note is shown in full. Lives here so it survives re-renders and editing.
+  const [noteOpen, setNoteOpen] = useState(false);
+  const hasNotes = task.notes.length > 0;
+  const noteId = `${titleId}-note`;
   return (
     <>
       {editing ? (
@@ -199,8 +204,38 @@ const TaskBody = memo(function TaskBody({
                 #{tag}
               </button>
             ))}
+            {hasNotes && (
+              <button
+                type="button"
+                onClick={() => setNoteOpen((open) => !open)}
+                aria-expanded={noteOpen}
+                aria-controls={noteId}
+                aria-label={noteOpen ? 'Hide note' : 'Show note'}
+                title={noteOpen ? 'Hide note' : 'Show note'}
+                className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 font-medium text-slate-600 ring-1 ring-inset ring-slate-900/10 transition-colors hover:bg-violet-500/10 hover:text-violet-700 focus-ring dark:text-slate-400 dark:ring-white/10 dark:hover:text-violet-300"
+              >
+                <StickyNote className="size-3" aria-hidden />
+                <span aria-hidden>Note</span>
+                <ChevronDown
+                  className={cn('size-3 transition-transform duration-200 motion-reduce:transition-none', noteOpen && 'rotate-180')}
+                  aria-hidden
+                />
+              </button>
+            )}
             {task.completed && <span className="sr-only">Completed</span>}
           </div>
+          {hasNotes && (
+            <p
+              id={noteId}
+              className={cn(
+                'mt-1.5 break-words text-[13px] leading-5',
+                task.completed ? 'text-slate-500/80 dark:text-slate-500' : 'text-slate-600 dark:text-slate-400',
+                noteOpen ? 'whitespace-pre-wrap' : 'line-clamp-2 whitespace-pre-line',
+              )}
+            >
+              <NoteText text={task.notes} />
+            </p>
+          )}
         </div>
 
         <div className={cn('flex shrink-0 items-center gap-0.5 transition-opacity duration-150', hoverReveal)}>

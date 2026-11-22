@@ -8,7 +8,7 @@ const done = (page, title) => page.getByRole('checkbox', { name: 'Done: ' + titl
 const action = (page, verb, title) => page.getByRole('button', { name: verb + ' "' + title + '"', exact: true });
 const filter = (page, name) => page.getByRole('group', { name: 'Filter by status' }).getByRole('button', { name: new RegExp('^' + name + '\\b') });
 const theme = page => page.getByRole('switch', { name: 'Dark theme' });
-const titles = page => page.locator('[data-task-row] p[id^="task-title-"]:visible');
+const titles = page => page.locator('[data-task-row] p[id^="task-title-"]:not([id$="-note"]):visible');
 
 async function add(page, title) {
   await composer(page).fill(title);
@@ -319,4 +319,156 @@ test('13 Enabled Add task label contrast', async ({ page }, info) => {
   }, pixels.toString('base64'));
   await info.attach('contrast-samples', { body: JSON.stringify(ratios), contentType: 'application/json' });
   expect(Math.min(...ratios.map(sample => sample.ratio))).toBeGreaterThanOrEqual(4.5);
+});
+
+const notes = page => page.getByRole('textbox', { name: 'Notes', exact: true });
+const noteToggle = (page, name) => page.getByRole('button', { name: name + ' note', exact: true });
+const save = page => page.getByRole('button', { name: 'Save', exact: true });
+
+async function addWithNote(page, title, note) {
+  await add(page, title);
+  await action(page, 'Edit', title).click();
+  await notes(page).fill(note);
+  await save(page).click();
+  await expect(notes(page)).toHaveCount(0);
+}
+
+test('14 Add a multiline note and show its preview', async ({ page }) => {
+  const note = 'Confirm the agenda.\nSend it to the team.';
+  await addWithNote(page, 'QA meeting', note);
+  await expect(noteToggle(page, 'Show').getByText('Note', { exact: true })).toBeVisible();
+  const preview = page.getByText(note, { exact: true });
+  await expect(preview).toBeVisible();
+  await expect(preview).toHaveClass(/\bline-clamp-2\b/);
+});
+
+test('15 Edit and clear an existing note', async ({ page }) => {
+  const title = 'QA schedule';
+  const original = 'Meet on Monday.';
+  const updated = 'Meet on Thursday.';
+  await addWithNote(page, title, original);
+  await action(page, 'Edit', title).click();
+  await expect(notes(page)).toHaveValue(original);
+  await notes(page).fill(updated);
+  await save(page).click();
+  await expect(page.getByText(updated, { exact: true })).toBeVisible();
+  await expect(page.getByText(original, { exact: true })).toHaveCount(0);
+
+  await action(page, 'Edit', title).click();
+  await notes(page).clear();
+  await save(page).click();
+  await expect(titles(page)).toHaveText([title]);
+  await expect(noteToggle(page, 'Show')).toHaveCount(0);
+  await expect(page.getByText('Note', { exact: true })).toHaveCount(0);
+  await expect(page.getByText(updated, { exact: true })).toHaveCount(0);
+});
+
+test('16 Keep notes with their tasks after reload', async ({ page }) => {
+  const title = 'QA packing';
+  const other = 'QA errands';
+  const note = 'Bring the spare charger.';
+  await addWithNote(page, title, note);
+  await add(page, other);
+  await page.reload();
+  await expect(titles(page)).toHaveText([other, title]);
+  const rows = page.locator('[data-task-row]');
+  await expect(rows.filter({ has: action(page, 'Edit', title) }).getByText(note, { exact: true })).toBeVisible();
+  await expect(rows.filter({ has: action(page, 'Edit', other) }).getByRole('button', { name: 'Show note' })).toHaveCount(0);
+  await action(page, 'Edit', title).click();
+  await expect(notes(page)).toHaveValue(note);
+});
+
+test('17 Search note text case-insensitively', async ({ page }) => {
+  await addWithNote(page, 'QA reservation', 'Ask for the Juniper room.');
+  await addWithNote(page, 'QA supplies', 'Order more envelopes.');
+  const search = page.getByRole('searchbox');
+  await search.fill('jUNIPER');
+  await expect(titles(page)).toHaveText(['QA reservation']);
+  await search.clear();
+  await expect(titles(page)).toHaveText(['QA supplies', 'QA reservation']);
+});
+
+test('18 Expand and collapse a multiline note', async ({ page }, info) => {
+  const note = 'Confirm the room.\nPrint the handouts.\nBring the sign-in sheet.\nSend the recap.';
+  await addWithNote(page, 'QA workshop', note);
+  const preview = page.getByText(note, { exact: true });
+  await expect(noteToggle(page, 'Show')).toHaveAttribute('aria-expanded', 'false');
+  await expect(preview).toBeVisible();
+  await expect(preview).toHaveCSS('-webkit-line-clamp', '2');
+  const collapsedHeight = (await preview.boundingBox()).height;
+
+  await noteToggle(page, 'Show').click();
+  await expect(noteToggle(page, 'Hide')).toHaveAttribute('aria-expanded', 'true');
+  await expect(preview).toHaveCSS('white-space', 'pre-wrap');
+  expect(await preview.textContent()).toBe(note);
+  await expect.poll(async () => (await preview.boundingBox()).height).toBeGreaterThan(collapsedHeight);
+  await screenshot(page, info, 'desktop-notes-expanded');
+
+  await noteToggle(page, 'Hide').click();
+  await expect(noteToggle(page, 'Show')).toHaveAttribute('aria-expanded', 'false');
+  await expect(preview).toHaveCSS('-webkit-line-clamp', '2');
+});
+
+test.describe('touch viewport', () => {
+  test.use({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true });
+
+  test('19 Mobile note expands and collapses without horizontal overflow', async ({ page }, info) => {
+    const note = 'Confirm the room.\nPrint the handouts.\nBring the sign-in sheet.';
+    await addWithNote(page, 'QA mobile workshop', note);
+    await expect(noteToggle(page, 'Show')).toHaveAttribute('aria-expanded', 'false');
+    await noteToggle(page, 'Show').tap();
+    await expect(noteToggle(page, 'Hide')).toHaveAttribute('aria-expanded', 'true');
+    const preview = page.getByText(note, { exact: true });
+    await expect(preview).toBeVisible();
+    await expect(preview).toHaveCSS('white-space', 'pre-wrap');
+    expect(await page.evaluate(() => ({ width: innerWidth, scroll: document.documentElement.scrollWidth })))
+      .toEqual({ width: 390, scroll: 390 });
+    await screenshot(page, info, 'mobile-notes-expanded');
+    await noteToggle(page, 'Hide').tap();
+    await expect(noteToggle(page, 'Show')).toHaveAttribute('aria-expanded', 'false');
+    await expect(preview).toHaveCSS('-webkit-line-clamp', '2');
+  });
+});
+
+test('20 Undo delete restores the note', async ({ page }) => {
+  const title = 'QA restore';
+  const note = 'Return the library books.';
+  await addWithNote(page, title, note);
+  await action(page, 'Delete', title).click();
+  await expect(titles(page)).toHaveCount(0);
+  await page.getByRole('button', { name: 'Undo', exact: true }).click();
+  await expect(titles(page)).toHaveText([title]);
+  await expect(page.getByText(note, { exact: true })).toBeVisible();
+});
+
+test('21 Enter adds a note newline and Ctrl+Enter saves', async ({ page }) => {
+  await add(page, 'QA keyboard notes');
+  await action(page, 'Edit', 'QA keyboard notes').click();
+  await expect(notes(page)).toHaveAccessibleName('Notes');
+  await expect(notes(page)).toHaveAttribute('placeholder', 'Add a note…');
+  await notes(page).fill('First line');
+  await notes(page).press('End');
+  await notes(page).press('Enter');
+  await expect(notes(page)).toBeFocused();
+  await expect(notes(page)).toHaveValue('First line\n');
+  await notes(page).pressSequentially('Second line');
+  await notes(page).press('Control+Enter');
+  await expect(notes(page)).toHaveCount(0);
+  await expect(page.getByText('First line\nSecond line', { exact: true })).toBeVisible();
+});
+
+test('22 Link HTTPS URLs and keep other schemes as text', async ({ page }) => {
+  const url = 'https://example.com/guide';
+  const script = 'javascript:alert(1)';
+  const ftp = 'ftp://example.com/file';
+  await addWithNote(page, 'QA links', [url, script, ftp].join('\n'));
+  await noteToggle(page, 'Show').click();
+  const row = page.locator('[data-task-row]');
+  const link = row.getByRole('link', { name: url, exact: true });
+  await expect(row.getByRole('link')).toHaveCount(1);
+  await expect(link).toHaveAttribute('href', url);
+  await expect(link).toHaveAttribute('target', '_blank');
+  await expect(link).toHaveAttribute('rel', 'noopener noreferrer');
+  await expect(row).toContainText(script);
+  await expect(row).toContainText(ftp);
 });

@@ -3,6 +3,7 @@ import { createId } from './id';
 import { todayISO } from './date';
 
 export const MAX_TITLE_LENGTH = 280;
+export const MAX_NOTES_LENGTH = 2000;
 const MAX_TAGS = 8;
 const MAX_TAG_LENGTH = 24;
 const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/;
@@ -99,6 +100,15 @@ export function parseQuickAdd(input: string): QuickAddResult {
   return { title, tags: uniqueTags(tags), priority };
 }
 
+/**
+ * Normalises a note: non-strings become "", line endings become "\n", surrounding whitespace is trimmed
+ * (internal newlines are kept) and the result is capped at MAX_NOTES_LENGTH characters.
+ */
+export function normalizeNotes(raw: unknown): string {
+  if (typeof raw !== 'string') return '';
+  return raw.replace(/\r\n?/g, '\n').trim().slice(0, MAX_NOTES_LENGTH).trimEnd();
+}
+
 export function createTask(draft: TaskDraft): Task {
   return {
     id: createId(),
@@ -107,6 +117,7 @@ export function createTask(draft: TaskDraft): Task {
     priority: draft.priority,
     tags: uniqueTags(draft.tags),
     dueDate: draft.dueDate,
+    notes: normalizeNotes(draft.notes),
     createdAt: Date.now(),
     completedAt: null,
   };
@@ -131,6 +142,8 @@ export function sanitizeTasks(raw: unknown): Task[] | null {
       priority: isPriority(r.priority) ? r.priority : 'medium',
       tags: Array.isArray(r.tags) ? uniqueTags(r.tags.filter((t): t is string => typeof t === 'string')) : [],
       dueDate: typeof r.dueDate === 'string' && ISO_DATE.test(r.dueDate) ? r.dueDate : null,
+      // Records saved before notes existed have no `notes` key; treat them (and any non-string) as empty.
+      notes: normalizeNotes(r.notes),
       createdAt: typeof r.createdAt === 'number' ? r.createdAt : Date.now(),
       completedAt: typeof r.completedAt === 'number' ? r.completedAt : null,
     });
@@ -153,7 +166,12 @@ export function filterTasks(tasks: Task[], filters: Filters, query: string): Tas
     if (filters.status === 'active' && task.completed) return false;
     if (filters.status === 'done' && !task.completed) return false;
     if (filters.tag && !task.tags.includes(filters.tag)) return false;
-    if (q && !task.title.toLowerCase().includes(q) && !task.tags.some((t) => t.includes(q.replace(/^#/, '')))) {
+    if (
+      q &&
+      !task.title.toLowerCase().includes(q) &&
+      !task.tags.some((t) => t.includes(q.replace(/^#/, ''))) &&
+      !task.notes.toLowerCase().includes(q)
+    ) {
       return false;
     }
     return true;
