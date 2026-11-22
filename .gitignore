@@ -33,3 +33,10 @@ Thumbs.db
 
 # Vercel
 .vercel/
+.vercel
+.env*
+
+# Playwright / test output
+test-artifacts/
+test-results/
+playwright-report/

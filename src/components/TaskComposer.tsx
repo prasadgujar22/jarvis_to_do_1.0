@@ -76,7 +76,7 @@ export const TaskComposer = memo(function TaskComposer({ inputRef, onAdd }: Task
           disabled={!canSubmit}
           className={cn(
             'inline-flex h-11 shrink-0 items-center gap-1.5 rounded-2xl px-4 text-sm font-semibold text-white transition-all duration-200',
-            'bg-gradient-to-br from-violet-500 via-indigo-500 to-cyan-500 shadow-lg shadow-indigo-500/25',
+            'bg-gradient-to-br from-violet-700 via-indigo-700 to-cyan-800 shadow-lg shadow-indigo-500/25',
             'hover:brightness-110 active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-45 disabled:shadow-none',
             'focus-ring',
           )}
