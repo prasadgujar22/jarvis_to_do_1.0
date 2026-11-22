@@ -359,7 +359,7 @@ test('15 Edit and clear an existing note', async ({ page }) => {
   await save(page).click();
   await expect(titles(page)).toHaveText([title]);
   await expect(noteToggle(page, 'Show')).toHaveCount(0);
-  await expect(page.getByText('Note', { exact: true })).toHaveCount(0);
+  await expect(taskRow(page, title).getByText('Note', { exact: true })).toHaveCount(0);
   await expect(page.getByText(updated, { exact: true })).toHaveCount(0);
 });
 
@@ -471,4 +471,105 @@ test('22 Link HTTPS URLs and keep other schemes as text', async ({ page }) => {
   await expect(link).toHaveAttribute('rel', 'noopener noreferrer');
   await expect(row).toContainText(script);
   await expect(row).toContainText(ftp);
+});
+
+const composerForm = page => page.getByRole('form', { name: 'Add a task' });
+const taskRow = (page, title) => page.locator('[data-task-row]').filter({ has: action(page, 'Edit', title) });
+
+async function expectNotePreview(page, title, note) {
+  const row = taskRow(page, title);
+  await expect(row.getByRole('button', { name: 'Show note', exact: true })
+    .getByText('Note', { exact: true })).toBeVisible();
+  const preview = row.getByText(note, { exact: true });
+  await expect(preview).toBeVisible();
+  expect(await preview.textContent()).toBe(note);
+}
+
+test('23 Create a task with a multiline composer note and reset the composer', async ({ page }, info) => {
+  const title = 'QA planning';
+  const note = 'Review the draft.\nShare it with the team.';
+  const form = composerForm(page);
+  const field = notes(form);
+  const toggle = noteToggle(form, 'Add');
+
+  await composer(form).fill(title);
+  await expect(toggle).toHaveAttribute('aria-expanded', 'false');
+  await expect(field).toHaveCount(0);
+  await toggle.click();
+  await expect(noteToggle(form, 'Hide')).toHaveAttribute('aria-expanded', 'true');
+  await expect(field).toBeVisible();
+  await expect(field).toHaveAttribute('placeholder', 'Add a note…');
+  await field.fill('  ' + note + '  ');
+  await screenshot(page, info, 'desktop-composer-notes-open');
+  await form.getByRole('button', { name: 'Add task', exact: true }).click();
+
+  await expect(titles(page)).toHaveText([title]);
+  await expectNotePreview(page, title, note);
+  await expect(field).toHaveCount(0);
+  await expect(toggle).toHaveAttribute('aria-expanded', 'false');
+  await expect(composer(form)).toBeFocused();
+  await toggle.click();
+  await expect(field).toHaveValue('');
+});
+
+test('24 Persist a composer note after reload', async ({ page }) => {
+  const title = 'QA travel';
+  const note = 'Pack the adapter.\nPrint the itinerary.';
+  const form = composerForm(page);
+  await composer(form).fill(title);
+  await noteToggle(form, 'Add').click();
+  await notes(form).fill(note);
+  await form.getByRole('button', { name: 'Add task', exact: true }).click();
+  await expectNotePreview(page, title, note);
+
+  await page.reload();
+  await expect(titles(page)).toHaveText([title]);
+  await expectNotePreview(page, title, note);
+});
+
+test('25 Enter adds a composer note newline and Ctrl+Enter creates the task', async ({ page }) => {
+  const title = 'QA keyboard draft';
+  const form = composerForm(page);
+  const field = notes(form);
+  await noteToggle(form, 'Add').click();
+  await field.fill('First line');
+  await field.press('Control+Enter');
+  await expect(composer(form)).toBeFocused();
+  await expect(titles(page)).toHaveCount(0);
+
+  await composer(form).fill(title);
+  await field.press('End');
+  await field.press('Enter');
+  await expect(field).toBeFocused();
+  await expect(field).toHaveValue('First line\n');
+  await expect(titles(page)).toHaveCount(0);
+  await field.pressSequentially('Second line');
+  await field.press('Control+Enter');
+
+  await expect(titles(page)).toHaveText([title]);
+  await expectNotePreview(page, title, 'First line\nSecond line');
+  await expect(field).toHaveCount(0);
+});
+
+test.describe('touch viewport', () => {
+  test.use({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true });
+
+  test('26 Mobile creates a task with a composer note without horizontal overflow', async ({ page }, info) => {
+    const title = 'QA mobile planning';
+    const note = 'Confirm the room.\nPrint the agenda.';
+    const form = composerForm(page);
+    const layout = () => page.evaluate(() => ({ width: innerWidth, scroll: document.documentElement.scrollWidth }));
+    await composer(form).fill(title);
+    await noteToggle(form, 'Add').tap();
+    await expect(notes(form)).toBeVisible();
+    await notes(form).fill(note);
+    expect(await layout()).toEqual({ width: 390, scroll: 390 });
+    await screenshot(page, info, 'mobile-composer-notes-open');
+    await form.getByRole('button', { name: 'Add', exact: true }).tap();
+
+    await expect(titles(page)).toHaveText([title]);
+    await expectNotePreview(page, title, note);
+    await expect(notes(form)).toHaveCount(0);
+    expect(await layout()).toEqual({ width: 390, scroll: 390 });
+  });
 });

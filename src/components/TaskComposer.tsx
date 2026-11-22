@@ -1,8 +1,9 @@
-import { memo, useMemo, useState, type FormEvent, type RefObject } from 'react';
+import { memo, useLayoutEffect, useMemo, useRef, useState, type FormEvent, type RefObject } from 'react';
 import { AnimatePresence, m } from 'motion/react';
-import { CalendarDays, Plus } from 'lucide-react';
+import { CalendarDays, Plus, StickyNote } from 'lucide-react';
 import type { Priority, TaskDraft } from '../types';
-import { MAX_TITLE_LENGTH, PRIORITY_META, parseQuickAdd } from '../lib/tasks';
+import { MAX_NOTES_LENGTH, MAX_TITLE_LENGTH, PRIORITY_META, normalizeNotes, parseQuickAdd } from '../lib/tasks';
+import { isMac } from '../lib/dom';
 import { describeDue } from '../lib/date';
 import { PriorityPicker } from './ui/PriorityPicker';
 import { Kbd } from './ui/Kbd';
@@ -17,9 +18,20 @@ export const TaskComposer = memo(function TaskComposer({ inputRef, onAdd }: Task
   const [text, setText] = useState('');
   const [priority, setPriority] = useState<Priority>('medium');
   const [dueDate, setDueDate] = useState('');
+  const [notesOpen, setNotesOpen] = useState(false);
+  const [notes, setNotes] = useState('');
+  const notesRef = useRef<HTMLTextAreaElement>(null);
   const parsed = useMemo(() => parseQuickAdd(text), [text]);
   const effectivePriority = parsed.priority ?? priority;
   const canSubmit = parsed.title.length > 0;
+
+  // Auto-grow the notes field to fit its content.
+  useLayoutEffect(() => {
+    const el = notesRef.current;
+    if (!el) return;
+    el.style.height = 'auto';
+    el.style.height = `${el.scrollHeight}px`;
+  }, [notes, notesOpen]);
 
   const submit = (event: FormEvent) => {
     event.preventDefault();
@@ -27,8 +39,16 @@ export const TaskComposer = memo(function TaskComposer({ inputRef, onAdd }: Task
       inputRef.current?.focus();
       return;
     }
-    onAdd({ title: parsed.title, tags: parsed.tags, priority: effectivePriority, dueDate: dueDate || null });
+    onAdd({
+      title: parsed.title,
+      tags: parsed.tags,
+      priority: effectivePriority,
+      dueDate: dueDate || null,
+      notes: normalizeNotes(notes),
+    });
     setText('');
+    setNotes('');
+    setNotesOpen(false);
     setDueDate('');
     setPriority('medium');
     inputRef.current?.focus();
@@ -104,6 +124,22 @@ export const TaskComposer = memo(function TaskComposer({ inputRef, onAdd }: Task
             className="w-[8.5rem] bg-transparent text-xs outline-none [&::-webkit-calendar-picker-indicator]:opacity-60"
           />
         </label>
+        <button
+          type="button"
+          onClick={() => setNotesOpen((open) => !open)}
+          aria-expanded={notesOpen}
+          aria-controls="composer-notes-panel"
+          aria-label={notesOpen ? 'Hide note' : 'Add note'}
+          className={cn(
+            'inline-flex h-8 items-center gap-1.5 rounded-xl px-2.5 text-xs font-medium ring-1 transition-colors duration-200 motion-reduce:transition-none focus-ring',
+            notesOpen || notes.trim()
+              ? 'bg-violet-500/15 text-violet-700 ring-violet-500/30 dark:text-violet-300'
+              : 'bg-slate-900/[0.05] text-slate-600 ring-slate-900/5 hover:bg-slate-900/[0.08] dark:bg-white/[0.05] dark:text-slate-300 dark:ring-white/5 dark:hover:bg-white/[0.08]',
+          )}
+        >
+          <StickyNote className="size-3.5" aria-hidden />
+          <span aria-hidden>Note</span>
+        </button>
         {dueDate && (
           <span className="text-xs text-slate-600 dark:text-slate-400">{describeDue(dueDate).description}</span>
         )}
@@ -112,6 +148,62 @@ export const TaskComposer = memo(function TaskComposer({ inputRef, onAdd }: Task
           <span className="font-medium text-slate-600 dark:text-slate-300">!high</span> for priority
         </p>
       </div>
+
+      <AnimatePresence initial={false}>
+        {notesOpen && (
+          <m.div
+            key="notes"
+            id="composer-notes-panel"
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="overflow-hidden"
+          >
+            <div className="relative px-2 pb-1 pt-1">
+              <label htmlFor="composer-notes" className="sr-only">
+                Notes
+              </label>
+              <StickyNote
+                className="pointer-events-none absolute left-5 top-3.5 size-3.5 text-slate-500 dark:text-slate-400"
+                aria-hidden
+              />
+              <textarea
+                id="composer-notes"
+                ref={notesRef}
+                value={notes}
+                autoFocus
+                onChange={(e) => setNotes(e.target.value)}
+                onKeyDown={(e) => {
+                  // Plain Enter inserts a newline (textareas never submit); Ctrl/⌘+Enter adds the task.
+                  if (e.key === 'Enter' && (e.ctrlKey || e.metaKey) && !e.nativeEvent.isComposing) {
+                    e.preventDefault();
+                    e.currentTarget.form?.requestSubmit();
+                  }
+                }}
+                maxLength={MAX_NOTES_LENGTH}
+                rows={2}
+                placeholder="Add a note…"
+                aria-describedby="composer-notes-hint"
+                className="block max-h-72 min-h-16 w-full resize-none overflow-y-auto rounded-xl bg-white/70 py-2 pl-8 pr-3 text-[13px] leading-5 text-slate-800 outline-none ring-1 ring-slate-900/10 transition-shadow duration-200 placeholder:text-slate-500 focus:ring-2 focus:ring-violet-500 motion-reduce:transition-none dark:bg-white/[0.06] dark:text-slate-200 dark:ring-white/10 dark:placeholder:text-slate-400"
+              />
+              <p
+                id="composer-notes-hint"
+                className="mt-1 flex justify-between gap-2 px-1 text-[11px] text-slate-500 dark:text-slate-400"
+              >
+                <span>
+                  <kbd className="font-sans">{isMac ? '⌘' : 'Ctrl'}+Enter</kbd> to add task
+                </span>
+                {notes.length > MAX_NOTES_LENGTH * 0.8 && (
+                  <span>
+                    {notes.length}/{MAX_NOTES_LENGTH}
+                  </span>
+                )}
+              </p>
+            </div>
+          </m.div>
+        )}
+      </AnimatePresence>
 
       <AnimatePresence initial={false}>
         {hasPreview && (
