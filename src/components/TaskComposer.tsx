@@ -1,5 +1,5 @@
-import { useMemo, useState, type FormEvent, type RefObject } from 'react';
-import { AnimatePresence, motion } from 'motion/react';
+import { memo, useMemo, useState, type FormEvent, type RefObject } from 'react';
+import { AnimatePresence, m } from 'motion/react';
 import { CalendarDays, Plus } from 'lucide-react';
 import type { Priority, TaskDraft } from '../types';
 import { MAX_TITLE_LENGTH, PRIORITY_META, parseQuickAdd } from '../lib/tasks';
@@ -13,7 +13,7 @@ interface TaskComposerProps {
   onAdd: (draft: TaskDraft) => void;
 }
 
-export function TaskComposer({ inputRef, onAdd }: TaskComposerProps) {
+export const TaskComposer = memo(function TaskComposer({ inputRef, onAdd }: TaskComposerProps) {
   const [text, setText] = useState('');
   const [priority, setPriority] = useState<Priority>('medium');
   const [dueDate, setDueDate] = useState('');
@@ -115,7 +115,7 @@ export function TaskComposer({ inputRef, onAdd }: TaskComposerProps) {
 
       <AnimatePresence initial={false}>
         {hasPreview && (
-          <motion.div
+          <m.div
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: 'auto', opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
@@ -135,9 +135,9 @@ export function TaskComposer({ inputRef, onAdd }: TaskComposerProps) {
                 </span>
               ))}
             </div>
-          </motion.div>
+          </m.div>
         )}
       </AnimatePresence>
     </form>
   );
-}
+});

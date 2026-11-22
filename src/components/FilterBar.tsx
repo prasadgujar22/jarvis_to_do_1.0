@@ -1,5 +1,4 @@
-import type { RefObject } from 'react';
-import { motion } from 'motion/react';
+import { memo, type RefObject } from 'react';
 import { Search, X } from 'lucide-react';
 import type { StatusFilter, TagCount } from '../types';
 import { Kbd } from './ui/Kbd';
@@ -23,7 +22,7 @@ interface FilterBarProps {
   onTagChange: (tag: string | null) => void;
 }
 
-export function FilterBar({
+export const FilterBar = memo(function FilterBar({
   status,
   counts,
   onStatusChange,
@@ -34,14 +33,22 @@ export function FilterBar({
   activeTag,
   onTagChange,
 }: FilterBarProps) {
+  const selectedIndex = Math.max(0, STATUS_OPTIONS.findIndex((o) => o.value === status));
+
   return (
     <div className="space-y-3">
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
         <div
           role="group"
           aria-label="Filter by status"
-          className="glass flex shrink-0 rounded-2xl p-1"
+          className="glass relative grid shrink-0 grid-cols-3 rounded-2xl p-1"
         >
+          {/* Sliding pill: equal-width columns let it move with a pure transform (no layout measurement). */}
+          <span
+            aria-hidden
+            style={{ transform: `translateX(${selectedIndex * 100}%)` }}
+            className="absolute bottom-1 left-1 top-1 w-[calc((100%-0.5rem)/3)] rounded-xl bg-gradient-to-br from-violet-500 via-indigo-500 to-cyan-500 shadow-md shadow-indigo-500/30 transition-transform duration-200 ease-[cubic-bezier(0.22,1,0.36,1)]"
+          />
           {STATUS_OPTIONS.map((option) => {
             const selected = status === option.value;
             return (
@@ -52,18 +59,11 @@ export function FilterBar({
                 title={`${option.label} (${option.key})`}
                 onClick={() => onStatusChange(option.value)}
                 className={cn(
-                  'relative flex flex-1 items-center justify-center gap-2 rounded-xl px-3.5 py-2 text-sm font-medium transition-colors duration-200 sm:flex-none',
+                  'relative flex items-center justify-center gap-2 rounded-xl px-3.5 py-2 text-sm font-medium transition-colors duration-150',
                   selected ? 'text-white' : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white',
                   'focus-ring',
                 )}
               >
-                {selected && (
-                  <motion.span
-                    layoutId="status-pill"
-                    className="absolute inset-0 rounded-xl bg-gradient-to-br from-violet-500 via-indigo-500 to-cyan-500 shadow-md shadow-indigo-500/30"
-                    transition={{ type: 'spring', stiffness: 420, damping: 34 }}
-                  />
-                )}
                 <span className="relative">{option.label}</span>
                 <span
                   className={cn(
@@ -136,7 +136,7 @@ export function FilterBar({
       )}
     </div>
   );
-}
+});
 
 function TagChip({ label, count, selected, onClick }: { label: string; count?: number; selected: boolean; onClick: () => void }) {
   return (

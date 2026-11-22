@@ -1,4 +1,4 @@
-import { AnimatePresence, motion } from 'motion/react';
+import { AnimatePresence, m } from 'motion/react';
 import { RotateCcw, X } from 'lucide-react';
 import type { UndoEntry } from '../types';
 
@@ -14,7 +14,7 @@ export function UndoToast({ entry, onUndo, onDismiss }: UndoToastProps) {
       <div role="status" aria-live="polite" className="contents">
         <AnimatePresence>
           {entry && (
-            <motion.div
+            <m.div
               key={entry.id}
               initial={{ opacity: 0, y: 24, scale: 0.96 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
@@ -39,7 +39,7 @@ export function UndoToast({ entry, onUndo, onDismiss }: UndoToastProps) {
               >
                 <X className="size-4" aria-hidden />
               </button>
-            </motion.div>
+            </m.div>
           )}
         </AnimatePresence>
       </div>

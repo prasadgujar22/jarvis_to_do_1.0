@@ -6,15 +6,8 @@
   --font-sans: 'Inter Variable', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
   --font-display: 'Space Grotesk Variable', 'Inter Variable', ui-sans-serif, system-ui, sans-serif;
 
-  --animate-aurora: aurora 22s ease-in-out infinite alternate;
-  --animate-aurora-slow: aurora 32s ease-in-out infinite alternate-reverse;
   --animate-float: float 6s ease-in-out infinite;
 
-  @keyframes aurora {
-    0% { transform: translate3d(0, 0, 0) scale(1); }
-    50% { transform: translate3d(6%, 4%, 0) scale(1.08); }
-    100% { transform: translate3d(-4%, 8%, 0) scale(0.96); }
-  }
   @keyframes float {
     0%, 100% { transform: translateY(0); }
     50% { transform: translateY(-8px); }
@@ -101,6 +94,9 @@
   }
 
   .task-card {
+    /* Off-screen rows skip style/layout/paint work; matters with long lists and filter switches. */
+    content-visibility: auto;
+    contain-intrinsic-size: auto 78px;
     background-color: var(--card-bg);
     border: 1px solid var(--card-border);
     transition:

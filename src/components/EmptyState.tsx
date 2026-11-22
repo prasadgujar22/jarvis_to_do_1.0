@@ -1,4 +1,4 @@
-import { motion } from 'motion/react';
+import { m } from 'motion/react';
 import type { ReactNode } from 'react';
 import { Kbd } from './ui/Kbd';
 
@@ -38,7 +38,7 @@ const CONTENT: Record<EmptyVariant, { title: string; body: ReactNode; action?: s
 export function EmptyState({ variant, onAction }: EmptyStateProps) {
   const content = CONTENT[variant];
   return (
-    <motion.div
+    <m.div
       key={variant}
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
@@ -59,7 +59,7 @@ export function EmptyState({ variant, onAction }: EmptyStateProps) {
           {content.action}
         </button>
       )}
-    </motion.div>
+    </m.div>
   );
 }
 

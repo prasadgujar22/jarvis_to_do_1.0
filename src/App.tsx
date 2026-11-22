@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { AnimatePresence, MotionConfig } from 'motion/react';
+import { AnimatePresence, LazyMotion, MotionConfig, domAnimation } from 'motion/react';
 import { GripVertical, Trash2 } from 'lucide-react';
 import type { StatusFilter, TaskDraft, TaskPatch, UndoEntry } from './types';
 import { useTheme } from './hooks/useTheme';
@@ -154,6 +154,9 @@ export default function App() {
   );
 
   const handleTagClick = useCallback((tag: string) => setTag(tag), [setTag]);
+  const openShortcuts = useCallback(() => setShortcutsOpen(true), []);
+  const closeShortcuts = useCallback(() => setShortcutsOpen(false), []);
+  const dismissUndo = useCallback(() => setUndoEntry(null), []);
 
   const moveFocus = useCallback((delta: number) => {
     const rows = getTaskRows();
@@ -228,12 +231,14 @@ export default function App() {
 
   return (
     <MotionConfig reducedMotion="user">
+      {/* domAnimation: animations + exit only. The heavier layout-projection engine is never loaded. */}
+      <LazyMotion features={domAnimation} strict>
       <a href="#composer-input" className="skip-link">
         Skip to new task
       </a>
       <Backdrop />
       <div className="relative isolate mx-auto flex min-h-dvh max-w-6xl flex-col px-4 pb-28 pt-6 sm:px-6 lg:px-8 lg:pt-10">
-        <Header theme={theme} stats={stats} onToggleTheme={toggleTheme} onOpenShortcuts={() => setShortcutsOpen(true)} />
+        <Header theme={theme} stats={stats} onToggleTheme={toggleTheme} onOpenShortcuts={openShortcuts} />
 
         <div className="mt-6 grid flex-1 gap-6 sm:mt-8 lg:grid-cols-[17.5rem_minmax(0,1fr)] lg:gap-8">
           <div className="hidden lg:block">
@@ -242,7 +247,7 @@ export default function App() {
               tags={tags}
               activeTag={filters.tag}
               onTagChange={setTag}
-              onOpenShortcuts={() => setShortcutsOpen(true)}
+              onOpenShortcuts={openShortcuts}
             />
           </div>
 
@@ -287,7 +292,9 @@ export default function App() {
                 </div>
               </div>
               <TaskList
-                tasks={visible}
+                tasks={tasks}
+                visible={visible}
+                viewKey={`${filters.status}|${filters.tag ?? ''}|${query.trim().toLowerCase()}`}
                 editingId={editingId}
                 onReorder={reorder}
                 onDragActiveChange={setDragging}
@@ -309,7 +316,7 @@ export default function App() {
           <p>Jarvis To-Do · Your tasks stay private, saved in this browser.</p>
           <button
             type="button"
-            onClick={() => setShortcutsOpen(true)}
+            onClick={openShortcuts}
             className="inline-flex items-center gap-1.5 rounded-lg px-2 py-1 hover:text-slate-800 focus-ring dark:hover:text-slate-200"
           >
             Press <Kbd>?</Kbd> for keyboard shortcuts
@@ -317,11 +324,12 @@ export default function App() {
         </footer>
       </div>
 
-      <UndoToast entry={undoEntry} onUndo={handleUndo} onDismiss={() => setUndoEntry(null)} />
-      <ShortcutsDialog open={shortcutsOpen} onClose={() => setShortcutsOpen(false)} />
+      <UndoToast entry={undoEntry} onUndo={handleUndo} onDismiss={dismissUndo} />
+      <ShortcutsDialog open={shortcutsOpen} onClose={closeShortcuts} />
       <div aria-live="polite" aria-atomic="true" className="sr-only">
         {message}
       </div>
+      </LazyMotion>
     </MotionConfig>
   );
 }

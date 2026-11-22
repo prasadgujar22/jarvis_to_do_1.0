@@ -1,5 +1,5 @@
 import { AlertTriangle, CalendarClock, CheckCircle2, Circle, Hash, Keyboard } from 'lucide-react';
-import type { ReactNode } from 'react';
+import { memo, type ReactNode } from 'react';
 import type { TagCount, TaskStats } from '../types';
 import { ProgressRing } from './ui/ProgressRing';
 import { Kbd } from './ui/Kbd';
@@ -13,7 +13,7 @@ interface SidebarProps {
   onOpenShortcuts: () => void;
 }
 
-export function Sidebar({ stats, tags, activeTag, onTagChange, onOpenShortcuts }: SidebarProps) {
+export const Sidebar = memo(function Sidebar({ stats, tags, activeTag, onTagChange, onOpenShortcuts }: SidebarProps) {
   const progress = stats.total ? stats.done / stats.total : 0;
   const message =
     stats.total === 0
@@ -93,7 +93,7 @@ export function Sidebar({ stats, tags, activeTag, onTagChange, onOpenShortcuts }
       </section>
     </aside>
   );
-}
+});
 
 function Stat({ icon, label, value, tone }: { icon: ReactNode; label: string; value: number; tone?: 'accent' | 'danger' }) {
   return (

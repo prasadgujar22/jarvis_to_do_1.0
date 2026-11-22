@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import { Keyboard } from 'lucide-react';
 import type { TaskStats, Theme } from '../types';
 import { formatLongDate, greeting } from '../lib/date';
@@ -12,7 +13,7 @@ interface HeaderProps {
   onOpenShortcuts: () => void;
 }
 
-export function Header({ theme, stats, onToggleTheme, onOpenShortcuts }: HeaderProps) {
+export const Header = memo(function Header({ theme, stats, onToggleTheme, onOpenShortcuts }: HeaderProps) {
   const progress = stats.total ? stats.done / stats.total : 0;
   return (
     <header className="flex items-center gap-3 sm:gap-4">
@@ -48,4 +49,4 @@ export function Header({ theme, stats, onToggleTheme, onOpenShortcuts }: HeaderP
       <ThemeToggle theme={theme} onToggle={onToggleTheme} />
     </header>
   );
-}
+});

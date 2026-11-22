@@ -1,5 +1,5 @@
 import { useId } from 'react';
-import { motion } from 'motion/react';
+import { m } from 'motion/react';
 
 interface ProgressRingProps {
   value: number;
@@ -32,7 +32,7 @@ export function ProgressRing({ value, size = 64, stroke = 6, label }: ProgressRi
           strokeWidth={stroke}
           className="stroke-slate-900/[0.08] dark:stroke-white/[0.08]"
         />
-        <motion.circle
+        <m.circle
           cx={size / 2}
           cy={size / 2}
           r={radius}

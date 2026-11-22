@@ -1,4 +1,4 @@
-import { AnimatePresence, motion } from 'motion/react';
+import { AnimatePresence, m } from 'motion/react';
 import { Moon, Sun } from 'lucide-react';
 import type { Theme } from '../types';
 import { cn } from '../lib/cn';
@@ -19,7 +19,7 @@ export function ThemeToggle({ theme, onToggle }: { theme: Theme; onToggle: () =>
       )}
     >
       <AnimatePresence mode="wait" initial={false}>
-        <motion.span
+        <m.span
           key={theme}
           initial={{ y: 14, opacity: 0, rotate: -60 }}
           animate={{ y: 0, opacity: 1, rotate: 0 }}
@@ -28,7 +28,7 @@ export function ThemeToggle({ theme, onToggle }: { theme: Theme; onToggle: () =>
           className="grid place-items-center"
         >
           {isDark ? <Moon className="size-[18px]" aria-hidden /> : <Sun className="size-[18px]" aria-hidden />}
-        </motion.span>
+        </m.span>
       </AnimatePresence>
     </button>
   );
