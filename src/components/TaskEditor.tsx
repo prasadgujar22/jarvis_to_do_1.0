@@ -13,7 +13,7 @@ interface TaskEditorProps {
 }
 
 const fieldClass =
-  'flex h-9 items-center gap-1.5 rounded-xl bg-slate-900/[0.05] px-2.5 text-xs text-slate-700 ring-1 ring-slate-900/5 has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-violet-500 dark:bg-white/[0.05] dark:text-slate-300 dark:ring-white/5';
+  'flex h-9 items-center gap-1.5 rounded-full border border-[#CFD9DE] bg-[#F7F9F9] px-3 text-xs text-[#0F1419] has-[:focus-visible]:border-[#1D9BF0] has-[:focus-visible]:bg-white dark:border-[#2F3336] dark:bg-[#202327] dark:text-[#E7E9EA] dark:has-[:focus-visible]:border-[#1D9BF0] dark:has-[:focus-visible]:bg-black';
 
 export function TaskEditor({ task, onSave, onCancel }: TaskEditorProps) {
   const [title, setTitle] = useState(task.title);
@@ -55,7 +55,7 @@ export function TaskEditor({ task, onSave, onCancel }: TaskEditorProps) {
         }
       }}
       aria-label={`Edit "${task.title}"`}
-      className="flex-1 space-y-2.5"
+      className="min-w-0 flex-1 space-y-2.5"
     >
       <label htmlFor={`edit-title-${task.id}`} className="sr-only">
         Title
@@ -68,28 +68,28 @@ export function TaskEditor({ task, onSave, onCancel }: TaskEditorProps) {
         autoFocus
         onFocus={(e) => e.currentTarget.select()}
         aria-invalid={!trimmed}
-        className="h-10 w-full rounded-xl bg-white/70 px-3 text-[15px] text-slate-900 outline-none ring-1 ring-slate-900/10 focus:ring-2 focus:ring-violet-500 dark:bg-white/[0.06] dark:text-white dark:ring-white/10"
+        className="h-10 w-full rounded-xl border border-[#CFD9DE] bg-white px-3 text-[15px] text-[#0F1419] outline-none focus:border-[#1D9BF0] focus:ring-1 focus:ring-[#1D9BF0] dark:border-[#2F3336] dark:bg-black dark:text-[#E7E9EA]"
       />
       <div className="flex flex-wrap items-center gap-2">
         <PriorityPicker value={priority} onChange={setPriority} size="sm" />
         <label className={fieldClass}>
-          <CalendarDays className="size-3.5" aria-hidden />
+          <CalendarDays className="size-3.5 shrink-0 text-[#096DAA] dark:text-[#1D9BF0]" aria-hidden />
           <span className="sr-only">Due date</span>
           <input
             type="date"
             value={dueDate}
             onChange={(e) => setDueDate(e.target.value)}
-            className="w-[8.5rem] bg-transparent outline-none"
+            className="w-[8rem] bg-transparent outline-none"
           />
         </label>
         <label className={cn(fieldClass, 'min-w-40 flex-1')}>
-          <Hash className="size-3.5" aria-hidden />
+          <Hash className="size-3.5 shrink-0 text-[#536471] dark:text-[#8B98A5]" aria-hidden />
           <span className="sr-only">Tags, separated by spaces or commas</span>
           <input
             value={tags}
             onChange={(e) => setTags(e.target.value)}
             placeholder="work, home"
-            className="min-w-0 flex-1 bg-transparent outline-none placeholder:text-slate-500 dark:placeholder:text-slate-400"
+            className="min-w-0 flex-1 bg-transparent outline-none placeholder:text-[#536471] dark:placeholder:text-[#8B98A5]"
           />
         </label>
       </div>
@@ -98,7 +98,7 @@ export function TaskEditor({ task, onSave, onCancel }: TaskEditorProps) {
           Notes
         </label>
         <StickyNote
-          className="pointer-events-none absolute left-3 top-2.5 size-3.5 text-slate-500 dark:text-slate-400"
+          className="pointer-events-none absolute left-3 top-2.5 size-3.5 text-[#536471] dark:text-[#8B98A5]"
           aria-hidden
         />
         <textarea
@@ -117,14 +117,14 @@ export function TaskEditor({ task, onSave, onCancel }: TaskEditorProps) {
           rows={2}
           placeholder="Add a note…"
           aria-describedby={`edit-notes-hint-${task.id}`}
-          className="block max-h-72 min-h-16 w-full resize-none overflow-y-auto rounded-xl bg-white/70 py-2 pl-8 pr-3 text-[13px] leading-5 text-slate-800 outline-none ring-1 ring-slate-900/10 placeholder:text-slate-500 focus:ring-2 focus:ring-violet-500 dark:bg-white/[0.06] dark:text-slate-200 dark:ring-white/10 dark:placeholder:text-slate-400"
+          className="block max-h-72 min-h-16 w-full resize-none overflow-y-auto rounded-2xl border border-[#CFD9DE] bg-[#F7F9F9] py-2 pl-8 pr-3 text-[14px] leading-5 text-[#0F1419] outline-none placeholder:text-[#536471] focus:border-[#1D9BF0] focus:bg-white focus:ring-1 focus:ring-[#1D9BF0] dark:border-[#2F3336] dark:bg-[#202327] dark:text-[#E7E9EA] dark:placeholder:text-[#8B98A5] dark:focus:bg-black"
         />
-        <p id={`edit-notes-hint-${task.id}`} className="mt-1 flex justify-between gap-2 px-1 text-[11px] text-slate-500 dark:text-slate-400">
+        <p id={`edit-notes-hint-${task.id}`} className="mt-1 flex justify-between gap-2 px-1 text-[12px] text-[#536471] dark:text-[#8B98A5]">
           <span>
             <kbd className="font-sans">{isMac ? '⌘' : 'Ctrl'}+Enter</kbd> to save
           </span>
           {notes.length > MAX_NOTES_LENGTH * 0.8 && (
-            <span>
+            <span className="tabular-nums">
               {notes.length}/{MAX_NOTES_LENGTH}
             </span>
           )}
@@ -134,7 +134,7 @@ export function TaskEditor({ task, onSave, onCancel }: TaskEditorProps) {
         <button
           type="button"
           onClick={onCancel}
-          className="inline-flex h-8 items-center gap-1 rounded-lg px-3 text-xs font-medium text-slate-600 hover:bg-slate-900/[0.06] focus-ring dark:text-slate-300 dark:hover:bg-white/[0.08]"
+          className="inline-flex h-8 items-center gap-1 rounded-full border border-[#CFD9DE] px-3.5 text-xs font-bold text-[#0F1419] transition-colors hover:bg-[#0F1419]/[0.06] focus-ring dark:border-[#536471] dark:text-[#E7E9EA] dark:hover:bg-white/10"
         >
           <X className="size-3.5" aria-hidden />
           Cancel
@@ -142,7 +142,7 @@ export function TaskEditor({ task, onSave, onCancel }: TaskEditorProps) {
         <button
           type="submit"
           disabled={!trimmed}
-          className="inline-flex h-8 items-center gap-1 rounded-lg bg-violet-600 px-3 text-xs font-semibold text-white shadow-sm hover:bg-violet-500 disabled:opacity-50 focus-ring"
+          className="inline-flex h-8 items-center gap-1 rounded-full bg-[#0F1419] px-4 text-xs font-bold text-white transition-colors hover:bg-[#272C30] disabled:opacity-45 focus-ring dark:bg-[#EFF3F4] dark:text-[#0F1419] dark:hover:bg-[#D7DBDC]"
         >
           <Check className="size-3.5" aria-hidden />
           Save

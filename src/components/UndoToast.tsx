@@ -16,17 +16,17 @@ export function UndoToast({ entry, onUndo, onDismiss }: UndoToastProps) {
           {entry && (
             <m.div
               key={entry.id}
-              initial={{ opacity: 0, y: 24, scale: 0.96 }}
+              initial={{ opacity: 0, y: 20, scale: 0.98 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: 16, scale: 0.96 }}
-              transition={{ type: 'spring', stiffness: 420, damping: 32 }}
-              className="pointer-events-auto flex items-center gap-1 rounded-2xl bg-slate-900/90 py-1.5 pl-4 pr-1.5 text-sm text-white shadow-2xl shadow-slate-900/30 ring-1 ring-white/10 backdrop-blur-xl dark:bg-white/90 dark:text-slate-900"
+              exit={{ opacity: 0, y: 12, scale: 0.98 }}
+              transition={{ type: 'spring', stiffness: 460, damping: 34 }}
+              className="pointer-events-auto flex items-center gap-1 rounded-xl border border-[#2F3336] bg-[#0F1419] py-2 pl-4 pr-2 text-[14px] text-white shadow-lg dark:border-[#CFD9DE] dark:bg-[#EFF3F4] dark:text-[#0F1419]"
             >
-              <span className="mr-2">{entry.message}</span>
+              <span className="mr-2 font-medium">{entry.message}</span>
               <button
                 type="button"
                 onClick={onUndo}
-                className="inline-flex items-center gap-1.5 rounded-xl px-3 py-1.5 font-semibold text-violet-300 hover:bg-white/10 focus-ring dark:text-violet-700 dark:hover:bg-slate-900/10"
+                className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 font-bold text-[#71C9F8] transition-colors hover:bg-white/10 focus-ring dark:text-[#0B69A3] dark:hover:bg-[#0F1419]/10"
               >
                 <RotateCcw className="size-3.5" aria-hidden />
                 Undo
@@ -35,7 +35,7 @@ export function UndoToast({ entry, onUndo, onDismiss }: UndoToastProps) {
                 type="button"
                 onClick={onDismiss}
                 aria-label="Dismiss"
-                className="grid size-8 place-items-center rounded-xl text-white/70 hover:bg-white/10 hover:text-white focus-ring dark:text-slate-500 dark:hover:bg-slate-900/10 dark:hover:text-slate-900"
+                className="grid size-7 place-items-center rounded-full text-white/75 transition-colors hover:bg-white/10 hover:text-white focus-ring dark:text-[#536471] dark:hover:bg-[#0F1419]/10 dark:hover:text-[#0F1419]"
               >
                 <X className="size-4" aria-hidden />
               </button>

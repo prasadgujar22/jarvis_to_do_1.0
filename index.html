@@ -5,7 +5,7 @@
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <meta name="description" content="Jarvis To-Do — a fast, beautiful, offline-first task list." />
-    <meta name="theme-color" content="#07080f" />
+    <meta name="theme-color" content="#FFFFFF" />
     <title>Jarvis To-Do</title>
     <script>
       // Apply the saved theme before first paint to avoid a flash of the wrong theme.
@@ -17,6 +17,8 @@
           }
           document.documentElement.classList.toggle('dark', t === 'dark');
           document.documentElement.style.colorScheme = t;
+          var meta = document.querySelector('meta[name="theme-color"]');
+          if (meta) meta.setAttribute('content', t === 'dark' ? '#000000' : '#FFFFFF');
         } catch (e) {}
       })();
     </script>

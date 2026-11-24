@@ -1,19 +1,9 @@
 import { memo, type RefObject } from 'react';
-import { Search, X } from 'lucide-react';
-import type { StatusFilter, TagCount } from '../types';
-import { Kbd } from './ui/Kbd';
+import type { TagCount } from '../types';
+import { SearchInput } from './SearchInput';
 import { cn } from '../lib/cn';
 
-const STATUS_OPTIONS: Array<{ value: StatusFilter; label: string; key: string }> = [
-  { value: 'all', label: 'All', key: '1' },
-  { value: 'active', label: 'Active', key: '2' },
-  { value: 'done', label: 'Done', key: '3' },
-];
-
 interface FilterBarProps {
-  status: StatusFilter;
-  counts: Record<StatusFilter, number>;
-  onStatusChange: (status: StatusFilter) => void;
   query: string;
   onQueryChange: (query: string) => void;
   searchRef: RefObject<HTMLInputElement | null>;
@@ -22,10 +12,8 @@ interface FilterBarProps {
   onTagChange: (tag: string | null) => void;
 }
 
+/** Mobile & tablet search and tag filter strip (desktop uses the Right Sidebar). */
 export const FilterBar = memo(function FilterBar({
-  status,
-  counts,
-  onStatusChange,
   query,
   onQueryChange,
   searchRef,
@@ -33,95 +21,12 @@ export const FilterBar = memo(function FilterBar({
   activeTag,
   onTagChange,
 }: FilterBarProps) {
-  const selectedIndex = Math.max(0, STATUS_OPTIONS.findIndex((o) => o.value === status));
-
   return (
-    <div className="space-y-3">
-      <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-        <div
-          role="group"
-          aria-label="Filter by status"
-          className="glass relative grid shrink-0 grid-cols-3 rounded-2xl p-1"
-        >
-          {/* Sliding pill: equal-width columns let it move with a pure transform (no layout measurement). */}
-          <span
-            aria-hidden
-            style={{ transform: `translateX(${selectedIndex * 100}%)` }}
-            className="absolute bottom-1 left-1 top-1 w-[calc((100%-0.5rem)/3)] rounded-xl bg-gradient-to-br from-violet-500 via-indigo-500 to-cyan-500 shadow-md shadow-indigo-500/30 transition-transform duration-200 ease-[cubic-bezier(0.22,1,0.36,1)]"
-          />
-          {STATUS_OPTIONS.map((option) => {
-            const selected = status === option.value;
-            return (
-              <button
-                key={option.value}
-                type="button"
-                aria-pressed={selected}
-                title={`${option.label} (${option.key})`}
-                onClick={() => onStatusChange(option.value)}
-                className={cn(
-                  'relative flex items-center justify-center gap-2 rounded-xl px-3.5 py-2 text-sm font-medium transition-colors duration-150',
-                  selected ? 'text-white' : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white',
-                  'focus-ring',
-                )}
-              >
-                <span className="relative">{option.label}</span>
-                <span
-                  className={cn(
-                    'relative min-w-5 rounded-md px-1 text-[11px] tabular-nums',
-                    selected ? 'bg-white/20 text-white' : 'bg-slate-900/[0.06] dark:bg-white/[0.08]',
-                  )}
-                >
-                  {counts[option.value]}
-                </span>
-              </button>
-            );
-          })}
-        </div>
-
-        <div className="glass group/search relative flex h-11 w-full min-w-0 items-center sm:flex-1 rounded-2xl focus-within:ring-2 focus-within:ring-violet-500/70">
-          <Search className="pointer-events-none ml-3.5 size-4 shrink-0 text-slate-500 dark:text-slate-400" aria-hidden />
-          <label htmlFor="search-input" className="sr-only">
-            Search tasks
-          </label>
-          <input
-            ref={searchRef}
-            id="search-input"
-            type="search"
-            value={query}
-            onChange={(e) => onQueryChange(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === 'Escape') {
-                e.preventDefault();
-                if (query) onQueryChange('');
-                else e.currentTarget.blur();
-              }
-            }}
-            placeholder="Search tasks or #tags"
-            autoComplete="off"
-            className="h-full min-w-0 flex-1 bg-transparent px-2.5 text-sm text-slate-900 outline-none placeholder:text-slate-500 dark:text-white dark:placeholder:text-slate-400 [&::-webkit-search-cancel-button]:hidden"
-          />
-          {query ? (
-            <button
-              type="button"
-              onClick={() => {
-                onQueryChange('');
-                searchRef.current?.focus();
-              }}
-              aria-label="Clear search"
-              className="mr-2 grid size-7 place-items-center rounded-lg text-slate-500 hover:bg-slate-900/5 hover:text-slate-900 focus-ring dark:hover:bg-white/10 dark:hover:text-white"
-            >
-              <X className="size-4" aria-hidden />
-            </button>
-          ) : (
-            <span className="mr-3 hidden sm:inline-flex group-focus-within/search:hidden" aria-hidden>
-              <Kbd>/</Kbd>
-            </span>
-          )}
-        </div>
-      </div>
+    <div className="space-y-2.5 border-b border-[#EFF3F4] px-4 py-2.5 lg:hidden dark:border-[#2F3336]">
+      <SearchInput query={query} onQueryChange={onQueryChange} inputRef={searchRef} />
 
       {tags.length > 0 && (
-        <div role="group" aria-label="Filter by tag" className="no-scrollbar -mx-1 flex gap-1.5 overflow-x-auto px-1 py-0.5 lg:hidden">
+        <div role="group" aria-label="Filter by tag" className="no-scrollbar -mx-1 flex gap-1.5 overflow-x-auto px-1 py-0.5">
           <TagChip label="All tags" selected={activeTag === null} onClick={() => onTagChange(null)} />
           {tags.map(({ tag, count }) => (
             <TagChip
@@ -145,14 +50,14 @@ function TagChip({ label, count, selected, onClick }: { label: string; count?: n
       aria-pressed={selected}
       onClick={onClick}
       className={cn(
-        'inline-flex shrink-0 items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium ring-1 ring-inset transition-colors duration-200 focus-ring',
+        'inline-flex shrink-0 items-center gap-1.5 rounded-full border px-3 py-1 text-[13px] font-semibold transition-colors duration-150 focus-ring',
         selected
-          ? 'bg-violet-600 text-white ring-violet-600 dark:bg-violet-500 dark:ring-violet-500'
-          : 'bg-white/60 text-slate-700 ring-slate-900/10 hover:bg-white dark:bg-white/[0.05] dark:text-slate-300 dark:ring-white/10 dark:hover:bg-white/10',
+          ? 'border-[#0F1419] bg-[#0F1419] text-white dark:border-[#EFF3F4] dark:bg-[#EFF3F4] dark:text-[#0F1419]'
+          : 'border-[#CFD9DE] bg-transparent text-[#0F1419] hover:bg-[#0F1419]/[0.05] dark:border-[#2F3336] dark:text-[#E7E9EA] dark:hover:bg-white/[0.06]',
       )}
     >
       {label}
-      {count !== undefined && <span className="tabular-nums opacity-70">{count}</span>}
+      {count !== undefined && <span className="tabular-nums opacity-75">{count}</span>}
     </button>
   );
 }

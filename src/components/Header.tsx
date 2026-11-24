@@ -1,52 +1,115 @@
 import { memo } from 'react';
 import { Keyboard } from 'lucide-react';
-import type { TaskStats, Theme } from '../types';
-import { formatLongDate, greeting } from '../lib/date';
+import type { StatusFilter, TaskStats, Theme } from '../types';
+import { formatLongDate } from '../lib/date';
 import { ThemeToggle } from './ThemeToggle';
-import { ProgressRing } from './ui/ProgressRing';
+import { JarvisMark } from './LeftRail';
 import { cn } from '../lib/cn';
+
+const STATUS_TABS: Array<{ value: StatusFilter; label: string; key: string }> = [
+  { value: 'all', label: 'All', key: '1' },
+  { value: 'active', label: 'Active', key: '2' },
+  { value: 'done', label: 'Done', key: '3' },
+];
 
 interface HeaderProps {
   theme: Theme;
   stats: TaskStats;
+  status: StatusFilter;
+  counts: Record<StatusFilter, number>;
+  onStatusChange: (status: StatusFilter) => void;
   onToggleTheme: () => void;
   onOpenShortcuts: () => void;
 }
 
-export const Header = memo(function Header({ theme, stats, onToggleTheme, onOpenShortcuts }: HeaderProps) {
-  const progress = stats.total ? stats.done / stats.total : 0;
+export const Header = memo(function Header({
+  theme,
+  stats,
+  status,
+  counts,
+  onStatusChange,
+  onToggleTheme,
+  onOpenShortcuts,
+}: HeaderProps) {
   return (
-    <header className="flex items-center gap-3 sm:gap-4">
-      <div className="relative grid size-11 shrink-0 place-items-center rounded-2xl bg-gradient-to-br from-violet-500 via-indigo-500 to-cyan-400 shadow-lg shadow-indigo-500/30 sm:size-12">
-        <svg viewBox="0 0 24 24" className="size-6 text-white" aria-hidden>
-          <path d="M6 12.5l4 4L18 8" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" />
-        </svg>
-        <span className="absolute inset-0 rounded-2xl ring-1 ring-inset ring-white/30" aria-hidden />
+    <header className="sticky top-0 z-30 border-b border-[#EFF3F4] bg-white/85 backdrop-blur-md dark:border-[#2F3336] dark:bg-black/75">
+      <div className="flex items-center justify-between gap-3 px-4 py-2.5">
+        <div className="flex min-w-0 items-center gap-2.5">
+          <div className="grid size-8 shrink-0 place-items-center text-[#0F1419] lg:hidden dark:text-[#E7E9EA]">
+            <JarvisMark className="size-6" />
+          </div>
+          <div className="min-w-0">
+            <h1 className="truncate text-[19px] font-bold leading-6 tracking-[-0.02em] text-[#0F1419] dark:text-[#E7E9EA]">
+              Jarvis To-Do
+            </h1>
+            <p className="truncate text-[13px] leading-4 text-[#536471] dark:text-[#8B98A5]">
+              {stats.total === 0
+                ? formatLongDate()
+                : `${stats.active} active · ${stats.done} done · ${formatLongDate()}`}
+            </p>
+          </div>
+        </div>
+
+        <div className="flex shrink-0 items-center gap-1 lg:hidden">
+          <button
+            type="button"
+            onClick={onOpenShortcuts}
+            aria-label="Keyboard shortcuts"
+            title="Keyboard shortcuts (?)"
+            className="inline-grid size-9 place-items-center rounded-full text-[#0F1419] transition-colors duration-150 hover:bg-[#0F1419]/10 focus-ring dark:text-[#E7E9EA] dark:hover:bg-[#E7E9EA]/10"
+          >
+            <Keyboard className="size-[18px]" aria-hidden />
+          </button>
+          <ThemeToggle theme={theme} onToggle={onToggleTheme} variant="icon" />
+        </div>
       </div>
-      <div className="min-w-0 flex-1">
-        <h1 className="font-display text-xl font-semibold tracking-tight text-slate-900 sm:text-2xl dark:text-white">
-          Jarvis <span className="text-gradient">To-Do</span>
-        </h1>
-        <p className="truncate text-sm text-slate-600 dark:text-slate-400">
-          {greeting()} · {formatLongDate()}
-        </p>
-      </div>
-      <div className="lg:hidden">
-        <ProgressRing value={progress} size={44} stroke={4} label={`${stats.done} of ${stats.total} tasks done`} />
-      </div>
-      <button
-        type="button"
-        onClick={onOpenShortcuts}
-        aria-label="Keyboard shortcuts"
-        title="Keyboard shortcuts (?)"
-        className={cn(
-          'glass hidden size-10 place-items-center rounded-2xl text-slate-700 transition-transform duration-200 hover:scale-105 active:scale-95 sm:inline-grid dark:text-slate-200',
-          'focus-ring',
-        )}
+
+      <div
+        role="group"
+        aria-label="Filter by status"
+        className="grid grid-cols-3"
       >
-        <Keyboard className="size-[18px]" aria-hidden />
-      </button>
-      <ThemeToggle theme={theme} onToggle={onToggleTheme} />
+        {STATUS_TABS.map((tab) => {
+          const selected = status === tab.value;
+          return (
+            <button
+              key={tab.value}
+              type="button"
+              aria-pressed={selected}
+              title={`${tab.label} (${tab.key})`}
+              onClick={() => onStatusChange(tab.value)}
+              className={cn(
+                'relative flex h-[48px] items-center justify-center px-3 text-[15px] transition-colors duration-150 sm:h-[52px]',
+                'hover:bg-[#0F1419]/[0.04] dark:hover:bg-white/[0.04]',
+                'focus-ring focus-visible:outline-offset-[-2px]',
+                selected
+                  ? 'font-bold text-[#0F1419] dark:text-[#E7E9EA]'
+                  : 'font-medium text-[#536471] dark:text-[#8B98A5]',
+              )}
+            >
+              <span className="relative inline-flex h-full items-center gap-1.5">
+                <span>{tab.label}</span>
+                <span
+                  className={cn(
+                    'text-[12px] tabular-nums',
+                    selected
+                      ? 'font-semibold text-[#536471] dark:text-[#8B98A5]'
+                      : 'font-normal text-[#536471] dark:text-[#8B98A5]',
+                  )}
+                >
+                  {counts[tab.value]}
+                </span>
+                {selected && (
+                  <span
+                    aria-hidden
+                    className="absolute inset-x-0 bottom-0 h-1 rounded-full bg-[#1D9BF0]"
+                  />
+                )}
+              </span>
+            </button>
+          );
+        })}
+      </div>
     </header>
   );
 });

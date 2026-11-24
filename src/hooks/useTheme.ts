@@ -4,7 +4,7 @@ import type { Theme } from '../types';
 import { STORAGE_KEYS } from '../lib/storage';
 import { usePersistentState } from './usePersistentState';
 
-const THEME_COLORS: Record<Theme, string> = { light: '#eef0f8', dark: '#07080f' };
+const THEME_COLORS: Record<Theme, string> = { light: '#FFFFFF', dark: '#000000' };
 
 function sanitizeTheme(raw: unknown): Theme | null {
   return raw === 'light' || raw === 'dark' ? raw : null;

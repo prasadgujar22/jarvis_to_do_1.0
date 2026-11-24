@@ -28,11 +28,11 @@ interface TaskItemProps extends TaskItemHandlers {
 }
 
 const DUE_TONE: Record<string, string> = {
-  overdue: 'bg-rose-500/10 text-rose-700 ring-rose-500/25 dark:text-rose-300',
-  today: 'bg-indigo-500/10 text-indigo-700 ring-indigo-500/25 dark:text-indigo-300',
-  soon: 'bg-slate-900/[0.05] text-slate-700 ring-slate-900/10 dark:bg-white/[0.06] dark:text-slate-300 dark:ring-white/10',
-  later: 'bg-slate-900/[0.05] text-slate-600 ring-slate-900/10 dark:bg-white/[0.06] dark:text-slate-400 dark:ring-white/10',
-  done: 'bg-slate-900/[0.04] text-slate-500 ring-slate-900/5 dark:bg-white/[0.04] dark:text-slate-400 dark:ring-white/5',
+  overdue: 'font-semibold text-[#C8102E] dark:text-[#FF6B74]',
+  today: 'font-semibold text-[#096DAA] dark:text-[#1D9BF0]',
+  soon: 'text-[#536471] dark:text-[#8B98A5]',
+  later: 'text-[#536471] dark:text-[#8B98A5]',
+  done: 'text-[#536471] dark:text-[#8B98A5]',
 };
 
 const EASE = [0.22, 1, 0.36, 1] as const;
@@ -43,11 +43,9 @@ const EASE = [0.22, 1, 0.36, 1] as const;
  */
 const rowVariants: Variants = {
   hidden: { opacity: 0, height: 0 },
-  shown: { opacity: 1, height: 'auto', transition: { duration: 0.24, ease: EASE } },
-  exit: { opacity: 0, height: 0, scale: 0.97, transition: { duration: 0.24, ease: EASE } },
+  shown: { opacity: 1, height: 'auto', transition: { duration: 0.2, ease: EASE } },
+  exit: { opacity: 0, height: 0, transition: { duration: 0.18, ease: EASE } },
 };
-
-const hoverReveal = '[@media(hover:hover)]:opacity-0 [@media(hover:hover)]:group-hover:opacity-100 [@media(hover:hover)]:group-focus-within:opacity-100';
 
 export const TaskItem = memo(function TaskItem({
   task,
@@ -63,8 +61,27 @@ export const TaskItem = memo(function TaskItem({
     disabled: editing || !isPresent || hiddenByFilter,
   });
   const style: CSSProperties = { transform: CSS.Translate.toString(transform), transition };
-  const priority = PRIORITY_META[task.priority];
   const titleId = `task-title-${task.id}`;
+
+  const reorderHandle = (
+    <button
+      ref={setActivatorNodeRef}
+      type="button"
+      {...attributes}
+      {...listeners}
+      aria-label={`Reorder "${task.title}"`}
+      title={`Reorder "${task.title}"`}
+      disabled={editing}
+      className={cn(
+        'inline-flex h-8 min-w-8 touch-none items-center justify-center rounded-full px-2 text-[#536471] transition-colors duration-150',
+        'cursor-grab hover:bg-[#00BA7C]/10 hover:text-[#00875A] active:cursor-grabbing',
+        'dark:text-[#8B98A5] dark:hover:text-[#00BA7C]',
+        'focus-ring disabled:invisible',
+      )}
+    >
+      <GripVertical className="size-4" aria-hidden />
+    </button>
+  );
 
   return (
     <m.li
@@ -80,77 +97,59 @@ export const TaskItem = memo(function TaskItem({
         hiddenByFilter && 'hidden',
       )}
     >
-      <div className="p-1">
-        <div
-          ref={setNodeRef}
-          style={style}
-          tabIndex={editing ? -1 : 0}
-          data-task-row={isPresent && !hiddenByFilter ? '' : undefined}
-          data-task-id={task.id}
-          role="group"
-          aria-labelledby={titleId}
-          aria-describedby={`${titleId}-meta`}
-          onKeyDown={(e) => {
-            if (e.target !== e.currentTarget || editing) return;
-            if (e.key === 'Enter') {
-              e.preventDefault();
-              onStartEdit(task.id);
-            } else if (e.key === ' ') {
-              e.preventDefault();
-              onToggle(task.id);
-            }
-          }}
-          className={cn(
-            'task-card group relative flex items-start gap-2 rounded-2xl py-3 pl-2 pr-2 outline-none sm:gap-3 sm:pr-3',
-            'focus-visible:ring-2 focus-visible:ring-violet-500',
-            isDragging && 'task-card--dragging',
-            task.completed && !editing && 'task-card--done',
-          )}
-        >
-          <span
-            aria-hidden
-            className={cn('absolute inset-y-3 left-0 w-[3px] rounded-full bg-gradient-to-b transition-opacity', priority.bar, task.completed && 'opacity-30')}
-          />
-
-          <button
-            ref={setActivatorNodeRef}
-            type="button"
-            {...attributes}
-            {...listeners}
-            aria-label={`Reorder "${task.title}"`}
-            disabled={editing}
-            className={cn(
-              'mt-0.5 grid h-7 w-5 shrink-0 touch-none place-items-center rounded-md text-slate-400 transition-opacity',
-              'cursor-grab hover:text-slate-700 active:cursor-grabbing dark:text-slate-500 dark:hover:text-slate-200',
-              'focus-ring focus-visible:opacity-100 disabled:invisible',
-              hoverReveal,
-            )}
-          >
-            <GripVertical className="size-4" aria-hidden />
-          </button>
-
-          <TaskBody task={task} editing={editing} titleId={titleId} {...handlers} />
-        </div>
+      <div
+        ref={setNodeRef}
+        style={style}
+        tabIndex={editing ? -1 : 0}
+        data-task-row={isPresent && !hiddenByFilter ? '' : undefined}
+        data-task-id={task.id}
+        role="group"
+        aria-labelledby={titleId}
+        aria-describedby={`${titleId}-meta`}
+        onKeyDown={(e) => {
+          if (e.target !== e.currentTarget || editing) return;
+          if (e.key === 'Enter') {
+            e.preventDefault();
+            onStartEdit(task.id);
+          } else if (e.key === ' ') {
+            e.preventDefault();
+            onToggle(task.id);
+          }
+        }}
+        className={cn(
+          'feed-row group relative flex items-start gap-3 px-4 py-3 outline-none',
+          'focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#1D9BF0]',
+          isDragging && 'feed-row--dragging',
+          task.completed && !editing && 'feed-row--done',
+        )}
+      >
+        <TaskBody
+          task={task}
+          editing={editing}
+          titleId={titleId}
+          reorderHandle={reorderHandle}
+          {...handlers}
+        />
       </div>
     </m.li>
   );
 });
 
 /**
- * Row contents, memoised separately: dnd-kit re-renders every sortable wrapper whenever the list's
- * item ids change (e.g. on every filter switch), but the contents only re-render when the task changes.
+ * Row contents, memoised separately so unrelated list updates stay cheap.
  */
 const TaskBody = memo(function TaskBody({
   task,
   editing,
   titleId,
+  reorderHandle,
   onToggle,
   onDelete,
   onStartEdit,
   onCancelEdit,
   onSave,
   onTagClick,
-}: TaskItemHandlers & { task: Task; editing: boolean; titleId: string }) {
+}: TaskItemHandlers & { task: Task; editing: boolean; titleId: string; reorderHandle: ReactNode }) {
   const priority = PRIORITY_META[task.priority];
   const due = task.dueDate ? describeDue(task.dueDate) : null;
   const dueTone = task.completed ? 'done' : (due?.tone ?? 'later');
@@ -158,96 +157,126 @@ const TaskBody = memo(function TaskBody({
   const [noteOpen, setNoteOpen] = useState(false);
   const hasNotes = task.notes.length > 0;
   const noteId = `${titleId}-note`;
+
+  if (editing) {
+    return <TaskEditor task={task} onSave={onSave} onCancel={() => onCancelEdit(task.id)} />;
+  }
+
   return (
     <>
-      {editing ? (
-      <TaskEditor task={task} onSave={onSave} onCancel={() => onCancelEdit(task.id)} />
-    ) : (
-      <>
-        <Checkbox checked={task.completed} title={task.title} onToggle={() => onToggle(task.id)} />
+      <Checkbox checked={task.completed} title={task.title} onToggle={() => onToggle(task.id)} />
 
-        <div className="min-w-0 flex-1 pt-0.5">
-          <p
-            id={titleId}
-            onDoubleClick={() => onStartEdit(task.id)}
+      <div className="min-w-0 flex-1">
+        <div
+          id={`${titleId}-meta`}
+          className="flex flex-wrap items-center gap-x-1.5 gap-y-0.5 text-[13px] leading-4 text-[#536471] dark:text-[#8B98A5]"
+        >
+          <span
             className={cn(
-              'break-words text-[15px] leading-6 transition-colors duration-300',
-              task.completed ? 'text-slate-500 dark:text-slate-400' : 'text-slate-900 dark:text-slate-50',
+              'inline-flex items-center gap-1.5 font-semibold',
+              task.completed ? 'text-[#536471] dark:text-[#8B98A5]' : 'text-[#0F1419] dark:text-[#E7E9EA]',
             )}
           >
-            <span className={cn('strike', task.completed && 'strike--on')}>{task.title}</span>
-          </p>
-          <div id={`${titleId}-meta`} className="mt-1.5 flex flex-wrap items-center gap-1.5 text-xs">
-            <span className={cn('inline-flex items-center gap-1 rounded-full px-2 py-0.5 font-medium ring-1 ring-inset', priority.chip, task.completed && 'opacity-60')}>
-              <span aria-hidden className={cn('size-1.5 rounded-full', priority.dot)} />
-              {priority.label}
-              <span className="sr-only"> priority</span>
-            </span>
-            {due && (
-              <span
-                title={due.description}
-                className={cn('inline-flex items-center gap-1 rounded-full px-2 py-0.5 font-medium ring-1 ring-inset', DUE_TONE[dueTone])}
-              >
-                <CalendarDays className="size-3" aria-hidden />
+            <span aria-hidden className={cn('size-2 rounded-full', priority.dot, task.completed && 'opacity-50')} />
+            {priority.label}
+            <span className="sr-only"> priority</span>
+          </span>
+
+          {due && (
+            <>
+              <span aria-hidden>·</span>
+              <span title={due.description} className={cn('inline-flex items-center gap-1', DUE_TONE[dueTone])}>
+                <CalendarDays className="size-3.5 shrink-0" aria-hidden />
                 <span aria-hidden>{due.tone === 'overdue' && !task.completed ? `Overdue · ${due.label}` : due.label}</span>
                 <span className="sr-only">{due.description}</span>
               </span>
-            )}
+            </>
+          )}
+
+          {task.completed && (
+            <>
+              <span aria-hidden>·</span>
+              <span>Completed</span>
+            </>
+          )}
+        </div>
+
+        <p
+          id={titleId}
+          onDoubleClick={() => onStartEdit(task.id)}
+          className={cn(
+            'mt-1 break-words text-[15px] leading-[1.4] transition-colors duration-200',
+            task.completed ? 'text-[#536471] dark:text-[#8B98A5]' : 'text-[#0F1419] dark:text-[#E7E9EA]',
+          )}
+        >
+          <span className={cn('strike', task.completed && 'strike--on')}>{task.title}</span>
+        </p>
+
+        {task.tags.length > 0 && (
+          <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-0.5">
             {task.tags.map((tag) => (
               <button
                 key={tag}
                 type="button"
                 onClick={() => onTagClick(tag)}
                 aria-label={`Filter by tag ${tag}`}
-                className="tag-chip hover:bg-violet-500/20 focus-ring"
+                className="tag-link rounded-sm text-[14px] font-medium focus-ring"
               >
                 #{tag}
               </button>
             ))}
-            {hasNotes && (
-              <button
-                type="button"
-                onClick={() => setNoteOpen((open) => !open)}
-                aria-expanded={noteOpen}
-                aria-controls={noteId}
-                aria-label={noteOpen ? 'Hide note' : 'Show note'}
-                title={noteOpen ? 'Hide note' : 'Show note'}
-                className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 font-medium text-slate-600 ring-1 ring-inset ring-slate-900/10 transition-colors hover:bg-violet-500/10 hover:text-violet-700 focus-ring dark:text-slate-400 dark:ring-white/10 dark:hover:text-violet-300"
-              >
-                <StickyNote className="size-3" aria-hidden />
-                <span aria-hidden>Note</span>
-                <ChevronDown
-                  className={cn('size-3 transition-transform duration-200 motion-reduce:transition-none', noteOpen && 'rotate-180')}
-                  aria-hidden
-                />
-              </button>
-            )}
-            {task.completed && <span className="sr-only">Completed</span>}
           </div>
+        )}
+
+        {hasNotes && (
+          <p
+            id={noteId}
+            className={cn(
+              'mt-1.5 break-words text-[14px] leading-5',
+              task.completed ? 'text-[#536471] dark:text-[#8B98A5]/80' : 'text-[#536471] dark:text-[#8B98A5]',
+              noteOpen ? 'whitespace-pre-wrap' : 'line-clamp-2 whitespace-pre-line',
+            )}
+          >
+            <NoteText text={task.notes} />
+          </p>
+        )}
+
+        <div className="mt-2 -ml-2 flex items-center gap-1 sm:gap-5">
           {hasNotes && (
-            <p
-              id={noteId}
+            <button
+              type="button"
+              onClick={() => setNoteOpen((open) => !open)}
+              aria-expanded={noteOpen}
+              aria-controls={noteId}
+              aria-label={noteOpen ? 'Hide note' : 'Show note'}
+              title={noteOpen ? 'Hide note' : 'Show note'}
               className={cn(
-                'mt-1.5 break-words text-[13px] leading-5',
-                task.completed ? 'text-slate-500/80 dark:text-slate-500' : 'text-slate-600 dark:text-slate-400',
-                noteOpen ? 'whitespace-pre-wrap' : 'line-clamp-2 whitespace-pre-line',
+                'inline-flex h-8 items-center gap-1 rounded-full px-2 text-[13px] font-medium transition-colors duration-150 focus-ring',
+                noteOpen
+                  ? 'text-[#096DAA] hover:bg-[#1D9BF0]/10 dark:text-[#1D9BF0]'
+                  : 'text-[#536471] hover:bg-[#1D9BF0]/10 hover:text-[#096DAA] dark:text-[#8B98A5] dark:hover:text-[#1D9BF0]',
               )}
             >
-              <NoteText text={task.notes} />
-            </p>
+              <StickyNote className="size-4" aria-hidden />
+              <span aria-hidden>Note</span>
+              <ChevronDown
+                className={cn('size-3.5 transition-transform duration-200 motion-reduce:transition-none', noteOpen && 'rotate-180')}
+                aria-hidden
+              />
+            </button>
           )}
-        </div>
 
-        <div className={cn('flex shrink-0 items-center gap-0.5 transition-opacity duration-150', hoverReveal)}>
+          {reorderHandle}
+
           <ActionButton label={`Edit "${task.title}"`} onClick={() => onStartEdit(task.id)}>
             <Pencil className="size-4" aria-hidden />
           </ActionButton>
+
           <ActionButton label={`Delete "${task.title}"`} onClick={() => onDelete(task.id)} danger>
             <Trash2 className="size-4" aria-hidden />
           </ActionButton>
         </div>
-      </>
-    )}
+      </div>
     </>
   );
 });
@@ -261,20 +290,12 @@ function Checkbox({ checked, title, onToggle }: { checked: boolean; title: strin
       aria-label={`Done: ${title}`}
       onClick={onToggle}
       className={cn(
-        'relative mt-0.5 grid size-6 shrink-0 place-items-center rounded-full border-2 transition-colors duration-200 focus-ring',
+        'relative mt-0.5 grid size-[22px] shrink-0 place-items-center rounded-full border-2 transition-colors duration-150 focus-ring',
         checked
-          ? 'border-transparent'
-          : 'border-slate-400 hover:border-violet-500 dark:border-slate-500 dark:hover:border-violet-400',
+          ? 'border-[#1D9BF0] bg-[#1D9BF0]'
+          : 'border-[#CFD9DE] bg-transparent hover:border-[#1D9BF0] hover:bg-[#1D9BF0]/10 dark:border-[#536471] dark:hover:border-[#1D9BF0]',
       )}
     >
-      <span
-        aria-hidden
-        className={cn(
-          'absolute inset-[-2px] rounded-full bg-gradient-to-br from-violet-500 via-indigo-500 to-cyan-400 shadow-md shadow-indigo-500/40',
-          'transition-[transform,opacity] duration-300 ease-[cubic-bezier(0.34,1.56,0.64,1)]',
-          checked ? 'scale-100 opacity-100' : 'scale-0 opacity-0',
-        )}
-      />
       <svg viewBox="0 0 24 24" className="relative size-3.5 text-white" aria-hidden>
         <path
           d="M5 12.5l4.5 4.5L19 7.5"
@@ -287,7 +308,7 @@ function Checkbox({ checked, title, onToggle }: { checked: boolean; title: strin
           strokeDasharray={1}
           className={cn(
             'transition-[stroke-dashoffset,opacity] duration-200 ease-out',
-            checked ? 'opacity-100 [stroke-dashoffset:0] delay-75' : 'opacity-0 [stroke-dashoffset:1]',
+            checked ? 'opacity-100 [stroke-dashoffset:0]' : 'opacity-0 [stroke-dashoffset:1]',
           )}
         />
       </svg>
@@ -295,7 +316,17 @@ function Checkbox({ checked, title, onToggle }: { checked: boolean; title: strin
   );
 }
 
-function ActionButton({ label, onClick, danger, children }: { label: string; onClick: () => void; danger?: boolean; children: ReactNode }) {
+function ActionButton({
+  label,
+  onClick,
+  danger,
+  children,
+}: {
+  label: string;
+  onClick: () => void;
+  danger?: boolean;
+  children: ReactNode;
+}) {
   return (
     <button
       type="button"
@@ -303,10 +334,10 @@ function ActionButton({ label, onClick, danger, children }: { label: string; onC
       aria-label={label}
       title={label}
       className={cn(
-        'grid size-8 place-items-center rounded-lg text-slate-500 transition-colors duration-150 focus-ring dark:text-slate-400',
+        'inline-flex h-8 min-w-8 items-center justify-center rounded-full px-2 text-[#536471] transition-colors duration-150 focus-ring dark:text-[#8B98A5]',
         danger
-          ? 'hover:bg-rose-500/10 hover:text-rose-600 dark:hover:text-rose-400'
-          : 'hover:bg-slate-900/[0.06] hover:text-slate-900 dark:hover:bg-white/[0.08] dark:hover:text-white',
+          ? 'hover:bg-[#F4212E]/10 hover:text-[#C8102E] dark:hover:text-[#F4212E]'
+          : 'hover:bg-[#1D9BF0]/10 hover:text-[#096DAA] dark:hover:text-[#1D9BF0]',
       )}
     >
       {children}

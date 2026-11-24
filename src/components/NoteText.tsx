@@ -44,7 +44,7 @@ export function NoteText({ text }: { text: string }) {
             href={seg.href}
             target="_blank"
             rel="noopener noreferrer"
-            className="break-all rounded-sm font-medium text-violet-700 underline decoration-violet-500/40 underline-offset-2 hover:decoration-violet-500 focus-ring dark:text-violet-300"
+            className="break-all rounded-sm font-medium text-[#096DAA] underline decoration-[#096DAA]/40 underline-offset-2 hover:decoration-[#096DAA] focus-ring dark:text-[#1D9BF0] dark:decoration-[#1D9BF0]/40 dark:hover:decoration-[#1D9BF0]"
           >
             {seg.value}
           </a>

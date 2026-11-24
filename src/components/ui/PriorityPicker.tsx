@@ -15,7 +15,7 @@ export function PriorityPicker({ value, onChange, size = 'md' }: PriorityPickerP
   return (
     <fieldset className="flex min-w-0 items-center">
       <legend className="sr-only">Priority</legend>
-      <div className="flex rounded-xl bg-slate-900/[0.05] p-0.5 ring-1 ring-slate-900/5 dark:bg-white/[0.05] dark:ring-white/5">
+      <div className="flex rounded-full border border-[#EFF3F4] bg-[#F7F9F9] p-0.5 dark:border-[#2F3336] dark:bg-[#16181C]">
         {PRIORITIES.map((p) => {
           const meta = PRIORITY_META[p];
           const checked = value === p;
@@ -23,12 +23,12 @@ export function PriorityPicker({ value, onChange, size = 'md' }: PriorityPickerP
             <label
               key={p}
               className={cn(
-                'relative flex cursor-pointer items-center gap-1.5 rounded-[10px] font-medium transition-all duration-200',
-                'has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-violet-500',
-                size === 'sm' ? 'px-2 py-1 text-xs' : 'px-2.5 py-1.5 text-xs sm:text-[13px]',
+                'relative flex cursor-pointer items-center gap-1 rounded-full font-medium transition-colors duration-150',
+                'has-[:focus-visible]:outline has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-[#1D9BF0]',
+                size === 'sm' ? 'px-1.5 py-1 text-xs' : 'px-2.5 py-1 text-xs sm:text-[13px]',
                 checked
-                  ? 'bg-white text-slate-900 shadow-sm dark:bg-white/[0.12] dark:text-white'
-                  : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white',
+                  ? 'bg-white font-semibold text-[#0F1419] shadow-[0_1px_2px_rgb(15_20_25/0.08)] dark:bg-[#2F3336] dark:text-[#E7E9EA]'
+                  : 'text-[#536471] hover:text-[#0F1419] dark:text-[#8B98A5] dark:hover:text-[#E7E9EA]',
               )}
             >
               <input
@@ -39,7 +39,7 @@ export function PriorityPicker({ value, onChange, size = 'md' }: PriorityPickerP
                 onChange={() => onChange(p)}
                 className="sr-only"
               />
-              <span aria-hidden className={cn('size-2 rounded-full', meta.dot)} />
+              <span aria-hidden className={cn('size-1.5 rounded-full', meta.dot)} />
               {meta.label}
             </label>
           );

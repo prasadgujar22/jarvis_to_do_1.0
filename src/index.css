@@ -3,44 +3,38 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 @theme {
-  --font-sans: 'Inter Variable', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
-  --font-display: 'Space Grotesk Variable', 'Inter Variable', ui-sans-serif, system-ui, sans-serif;
-
-  --animate-float: float 6s ease-in-out infinite;
-
-  @keyframes float {
-    0%, 100% { transform: translateY(0); }
-    50% { transform: translateY(-8px); }
-  }
+  --font-sans: 'Inter Variable', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
 }
 
 @layer base {
   :root {
-    --bg: #eef0f8;
-    --glass-bg: rgb(255 255 255 / 0.58);
-    --glass-strong-bg: rgb(255 255 255 / 0.86);
-    --glass-border: rgb(255 255 255 / 0.75);
-    --glass-edge: rgb(15 23 42 / 0.06);
-    --glass-shadow: 0 1px 2px rgb(15 23 42 / 0.04), 0 12px 40px -12px rgb(30 27 75 / 0.16);
-    --card-bg: rgb(255 255 255 / 0.62);
-    --card-bg-hover: rgb(255 255 255 / 0.9);
-    --card-border: rgb(15 23 42 / 0.06);
-    --grid-line: rgb(15 23 42 / 0.045);
-    --ring: #7c3aed;
+    --bg: #ffffff;
+    --surface: #f7f9f9;
+    --surface-input: #eff3f4;
+    --border: #eff3f4;
+    --border-strong: #cfd9de;
+    --text-primary: #0f1419;
+    --text-secondary: #536471;
+    --accent: #1d9bf0;
+    --accent-hover: #1a8cd8;
+    --accent-link: #096daa;
+    --row-hover: rgb(15 20 25 / 0.03);
+    --ring: #1d9bf0;
   }
 
   .dark {
-    --bg: #07080f;
-    --glass-bg: rgb(20 22 40 / 0.5);
-    --glass-strong-bg: rgb(18 20 36 / 0.88);
-    --glass-border: rgb(255 255 255 / 0.08);
-    --glass-edge: rgb(255 255 255 / 0.04);
-    --glass-shadow: 0 1px 0 rgb(255 255 255 / 0.04) inset, 0 20px 50px -20px rgb(0 0 0 / 0.7);
-    --card-bg: rgb(255 255 255 / 0.03);
-    --card-bg-hover: rgb(255 255 255 / 0.06);
-    --card-border: rgb(255 255 255 / 0.06);
-    --grid-line: rgb(255 255 255 / 0.035);
-    --ring: #a78bfa;
+    --bg: #000000;
+    --surface: #000000;
+    --surface-input: #202327;
+    --border: #2f3336;
+    --border-strong: #536471;
+    --text-primary: #e7e9ea;
+    --text-secondary: #8b98a5;
+    --accent: #1d9bf0;
+    --accent-hover: #1a8cd8;
+    --accent-link: #1d9bf0;
+    --row-hover: rgb(255 255 255 / 0.03);
+    --ring: #1d9bf0;
   }
 
   html {
@@ -49,13 +43,18 @@
   }
 
   body {
-    @apply min-h-dvh font-sans text-slate-900 antialiased dark:text-slate-100;
-    font-feature-settings: 'cv11', 'ss01', 'ss03';
+    min-height: 100dvh;
+    background-color: var(--bg);
+    color: var(--text-primary);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    font-feature-settings: 'cv11', 'ss01';
     text-rendering: optimizeLegibility;
   }
 
   ::selection {
-    background-color: rgb(139 92 246 / 0.3);
+    background-color: rgb(29 155 240 / 0.28);
   }
 
   button:not(:disabled),
@@ -65,87 +64,60 @@
 }
 
 @layer components {
-  .glass {
-    background-color: var(--glass-bg);
-    border: 1px solid var(--glass-border);
-    box-shadow: var(--glass-shadow), 0 0 0 1px var(--glass-edge);
-    -webkit-backdrop-filter: blur(22px) saturate(170%);
-    backdrop-filter: blur(22px) saturate(170%);
-  }
-
-  .glass-strong {
-    background-color: var(--glass-strong-bg);
-    border: 1px solid var(--glass-border);
-    box-shadow: 0 30px 80px -20px rgb(0 0 0 / 0.45), 0 0 0 1px var(--glass-edge);
-    -webkit-backdrop-filter: blur(28px) saturate(180%);
-    backdrop-filter: blur(28px) saturate(180%);
-  }
-
   .focus-ring:focus-visible {
     outline: 2px solid var(--ring);
     outline-offset: 2px;
   }
 
-  .text-gradient {
-    background-image: linear-gradient(120deg, #8b5cf6, #6366f1 45%, #22d3ee);
-    -webkit-background-clip: text;
-    background-clip: text;
-    color: transparent;
+  .x-card {
+    background-color: var(--surface);
+    border: 1px solid var(--border);
   }
 
-  .task-card {
+  .feed-row {
     /* Off-screen rows skip style/layout/paint work; matters with long lists and filter switches. */
     content-visibility: auto;
-    contain-intrinsic-size: auto 78px;
-    background-color: var(--card-bg);
-    border: 1px solid var(--card-border);
-    transition:
-      background-color 200ms ease,
-      box-shadow 200ms ease,
-      border-color 200ms ease;
+    contain-intrinsic-size: auto 92px;
+    background-color: var(--bg);
+    border-bottom: 1px solid var(--border);
+    transition: background-color 150ms ease;
   }
-  .task-card:hover,
-  .task-card:focus-within {
-    background-color: var(--card-bg-hover);
+  .feed-row:hover,
+  .feed-row:focus-within {
+    background-color: var(--row-hover);
   }
-  .task-card--done {
-    background-color: transparent;
+  .feed-row--done {
+    background-color: var(--bg);
   }
-  .task-card--dragging {
-    background-color: var(--glass-strong-bg);
-    box-shadow: 0 24px 50px -16px rgb(49 46 129 / 0.45), 0 0 0 1px rgb(139 92 246 / 0.45);
-    -webkit-backdrop-filter: blur(16px);
-    backdrop-filter: blur(16px);
+  .feed-row--dragging {
+    background-color: var(--bg);
+    box-shadow: 0 8px 28px rgb(0 0 0 / 0.16), 0 0 0 1px var(--accent);
+  }
+  .dark .feed-row--dragging {
+    background-color: #16181c;
+    box-shadow: 0 12px 32px rgb(0 0 0 / 0.75), 0 0 0 1px var(--accent);
   }
 
-  .tag-chip {
-    @apply inline-flex items-center rounded-full bg-violet-500/10 px-2 py-0.5 text-xs font-medium text-violet-700 ring-1 ring-violet-500/20 ring-inset transition-colors dark:text-violet-300;
+  .tag-link {
+    color: var(--accent-link);
+    transition: text-decoration-color 150ms ease, color 150ms ease;
+  }
+  .tag-link:hover {
+    text-decoration: underline;
+    text-underline-offset: 2px;
   }
 
   .strike {
     background-image: linear-gradient(currentColor, currentColor);
     background-repeat: no-repeat;
-    background-position: 0 55%;
+    background-position: 0 54%;
     background-size: 0% 1.5px;
     -webkit-box-decoration-break: clone;
     box-decoration-break: clone;
-    transition: background-size 350ms cubic-bezier(0.22, 1, 0.36, 1);
+    transition: background-size 280ms cubic-bezier(0.22, 1, 0.36, 1);
   }
   .strike--on {
     background-size: 100% 1.5px;
-  }
-
-  .bg-grid {
-    background-image:
-      linear-gradient(to right, var(--grid-line) 1px, transparent 1px),
-      linear-gradient(to bottom, var(--grid-line) 1px, transparent 1px);
-    background-size: 44px 44px;
-    -webkit-mask-image: radial-gradient(ellipse 80% 60% at 50% 0%, #000 30%, transparent 75%);
-    mask-image: radial-gradient(ellipse 80% 60% at 50% 0%, #000 30%, transparent 75%);
-  }
-
-  .bg-noise {
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.5 0 0 0 0 0.5 0 0 0 0 0.5 0 0 0 1 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
   }
 
   .no-scrollbar {
@@ -156,30 +128,41 @@
   }
 
   .skip-link {
-    @apply sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[60] focus:rounded-xl focus:bg-violet-600 focus:px-4 focus:py-2 focus:text-sm focus:font-medium focus:text-white;
+    @apply sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[60] focus:rounded-full focus:bg-[#0F1419] focus:px-4 focus:py-2 focus:text-sm focus:font-bold focus:text-white dark:focus:bg-[#EFF3F4] dark:focus:text-[#0F1419];
   }
 
   .dialog[open] {
-    animation: dialog-in 220ms cubic-bezier(0.22, 1, 0.36, 1);
+    animation: dialog-in 180ms cubic-bezier(0.22, 1, 0.36, 1);
   }
   .dialog[open]::backdrop {
-    animation: fade-in 220ms ease-out;
+    animation: fade-in 180ms ease-out;
   }
 }
 
 @keyframes dialog-in {
-  from { opacity: 0; transform: translateY(10px) scale(0.97); }
-  to { opacity: 1; transform: none; }
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
 }
+
 @keyframes fade-in {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
 /* Theme switch cross-fade (View Transitions API). */
 ::view-transition-old(root),
 ::view-transition-new(root) {
-  animation-duration: 380ms;
+  animation-duration: 280ms;
   animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
 }
 

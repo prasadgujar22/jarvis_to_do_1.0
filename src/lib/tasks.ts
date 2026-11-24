@@ -13,21 +13,21 @@ export const PRIORITIES: readonly Priority[] = ['high', 'medium', 'low'];
 export const PRIORITY_META: Record<Priority, { label: string; dot: string; chip: string; bar: string }> = {
   high: {
     label: 'High',
-    dot: 'bg-rose-500',
-    chip: 'bg-rose-500/10 text-rose-700 ring-rose-500/25 dark:text-rose-300',
-    bar: 'from-rose-500 to-orange-400',
+    dot: 'bg-[#F4212E]',
+    chip: 'bg-[#F4212E]/10 text-[#C8102E] ring-[#F4212E]/25 dark:text-[#FF6B74]',
+    bar: 'bg-[#F4212E]',
   },
   medium: {
     label: 'Medium',
-    dot: 'bg-amber-500',
-    chip: 'bg-amber-500/10 text-amber-800 ring-amber-500/25 dark:text-amber-300',
-    bar: 'from-amber-400 to-yellow-300',
+    dot: 'bg-[#FFAD1F]',
+    chip: 'bg-[#FFAD1F]/15 text-[#9A5B00] ring-[#FFAD1F]/30 dark:text-[#FFD166]',
+    bar: 'bg-[#FFAD1F]',
   },
   low: {
     label: 'Low',
-    dot: 'bg-sky-500',
-    chip: 'bg-sky-500/10 text-sky-800 ring-sky-500/25 dark:text-sky-300',
-    bar: 'from-sky-400 to-cyan-300',
+    dot: 'bg-[#1D9BF0]',
+    chip: 'bg-[#1D9BF0]/10 text-[#096DAA] ring-[#1D9BF0]/25 dark:text-[#1D9BF0]',
+    bar: 'bg-[#1D9BF0]',
   },
 };
 

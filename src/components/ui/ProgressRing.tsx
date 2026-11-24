@@ -1,4 +1,3 @@
-import { useId } from 'react';
 import { m } from 'motion/react';
 
 interface ProgressRingProps {
@@ -9,7 +8,6 @@ interface ProgressRingProps {
 }
 
 export function ProgressRing({ value, size = 64, stroke = 6, label }: ProgressRingProps) {
-  const gradientId = `ring-${useId().replace(/[^a-zA-Z0-9_-]/g, '')}`;
   const radius = (size - stroke) / 2;
   const circumference = 2 * Math.PI * radius;
   const clamped = Math.min(1, Math.max(0, value));
@@ -17,20 +15,13 @@ export function ProgressRing({ value, size = 64, stroke = 6, label }: ProgressRi
   return (
     <div className="relative shrink-0" style={{ width: size, height: size }} role="img" aria-label={label}>
       <svg width={size} height={size} className="-rotate-90" aria-hidden>
-        <defs>
-          <linearGradient id={gradientId} x1="0" y1="0" x2="1" y2="1">
-            <stop offset="0%" stopColor="#8b5cf6" />
-            <stop offset="60%" stopColor="#6366f1" />
-            <stop offset="100%" stopColor="#22d3ee" />
-          </linearGradient>
-        </defs>
         <circle
           cx={size / 2}
           cy={size / 2}
           r={radius}
           fill="none"
           strokeWidth={stroke}
-          className="stroke-slate-900/[0.08] dark:stroke-white/[0.08]"
+          className="stroke-[#EFF3F4] dark:stroke-[#2F3336]"
         />
         <m.circle
           cx={size / 2}
@@ -39,7 +30,7 @@ export function ProgressRing({ value, size = 64, stroke = 6, label }: ProgressRi
           fill="none"
           strokeWidth={stroke}
           strokeLinecap="round"
-          stroke={`url(#${gradientId})`}
+          stroke="#1D9BF0"
           strokeDasharray={circumference}
           initial={false}
           animate={{ strokeDashoffset: circumference * (1 - clamped) }}
@@ -48,7 +39,7 @@ export function ProgressRing({ value, size = 64, stroke = 6, label }: ProgressRi
       </svg>
       <span
         aria-hidden
-        className="absolute inset-0 grid place-items-center font-display font-semibold tabular-nums text-slate-900 dark:text-white"
+        className="absolute inset-0 grid place-items-center font-bold tabular-nums text-[#0F1419] dark:text-[#E7E9EA]"
         style={{ fontSize: Math.max(11, size * 0.22) }}
       >
         {Math.round(clamped * 100)}%

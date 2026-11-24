@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { AnimatePresence, LazyMotion, MotionConfig, domAnimation } from 'motion/react';
-import { GripVertical, Trash2 } from 'lucide-react';
+import { LazyMotion, MotionConfig, domAnimation } from 'motion/react';
+import { Trash2, X } from 'lucide-react';
 import type { StatusFilter, TaskDraft, TaskPatch, UndoEntry } from './types';
 import { useTheme } from './hooks/useTheme';
 import { useTasks } from './hooks/useTasks';
@@ -11,6 +11,7 @@ import { STORAGE_KEYS } from './lib/storage';
 import { DEFAULT_FILTERS, collectTags, computeStats, filterTasks, sanitizeFilters } from './lib/tasks';
 import { focusTaskRow, getFocusedTaskId, getTaskRows } from './lib/dom';
 import { Backdrop } from './components/Backdrop';
+import { LeftRail } from './components/LeftRail';
 import { Header } from './components/Header';
 import { Sidebar } from './components/Sidebar';
 import { TaskComposer } from './components/TaskComposer';
@@ -19,7 +20,6 @@ import { TaskList } from './components/TaskList';
 import { EmptyState, type EmptyVariant } from './components/EmptyState';
 import { UndoToast } from './components/UndoToast';
 import { ShortcutsDialog } from './components/ShortcutsDialog';
-import { Kbd } from './components/ui/Kbd';
 
 const UNDO_TIMEOUT_MS = 6000;
 const STATUS_LABEL: Record<StatusFilter, string> = { all: 'All tasks', active: 'Active', done: 'Completed' };
@@ -39,7 +39,20 @@ export default function App() {
   const [dragging, setDragging] = useState(false);
   const { message, announce } = useAnnouncer();
   const composerRef = useRef<HTMLInputElement>(null);
-  const searchRef = useRef<HTMLInputElement>(null);
+  const desktopSearchRef = useRef<HTMLInputElement>(null);
+  const mobileSearchRef = useRef<HTMLInputElement>(null);
+
+  const focusComposer = useCallback(() => {
+    composerRef.current?.focus();
+    composerRef.current?.scrollIntoView({ block: 'nearest' });
+  }, []);
+
+  const focusSearch = useCallback(() => {
+    const target = [desktopSearchRef.current, mobileSearchRef.current].find(
+      (el) => el && el.getClientRects().length > 0,
+    );
+    target?.focus();
+  }, []);
 
   const tags = useMemo(() => collectTags(tasks), [tasks]);
   const stats = useMemo(() => computeStats(tasks), [tasks]);
@@ -187,8 +200,8 @@ export default function App() {
     e.target === document.body || (e.target instanceof HTMLElement && e.target.hasAttribute('data-task-row'));
 
   const shortcuts: Shortcut[] = [
-    { key: 'n', handler: () => composerRef.current?.focus() },
-    { key: '/', handler: () => searchRef.current?.focus() },
+    { key: 'n', handler: focusComposer },
+    { key: '/', handler: focusSearch },
     { key: '1', handler: () => setStatus('all') },
     { key: '2', handler: () => setStatus('active') },
     { key: '3', handler: () => setStatus('done') },
@@ -225,7 +238,7 @@ export default function App() {
       setQuery('');
       setFilters((f) => ({ ...f, tag: null }));
     } else {
-      composerRef.current?.focus();
+      focusComposer();
     }
   };
 
@@ -233,64 +246,93 @@ export default function App() {
     <MotionConfig reducedMotion="user">
       {/* domAnimation: animations + exit only. The heavier layout-projection engine is never loaded. */}
       <LazyMotion features={domAnimation} strict>
-      <a href="#composer-input" className="skip-link">
-        Skip to new task
-      </a>
-      <Backdrop />
-      <div className="relative isolate mx-auto flex min-h-dvh max-w-6xl flex-col px-4 pb-28 pt-6 sm:px-6 lg:px-8 lg:pt-10">
-        <Header theme={theme} stats={stats} onToggleTheme={toggleTheme} onOpenShortcuts={openShortcuts} />
+        <a href="#composer-input" className="skip-link">
+          Skip to new task
+        </a>
+        <Backdrop />
 
-        <div className="mt-6 grid flex-1 gap-6 sm:mt-8 lg:grid-cols-[17.5rem_minmax(0,1fr)] lg:gap-8">
-          <div className="hidden lg:block">
-            <Sidebar
+        <div className="mx-auto flex min-h-dvh w-full max-w-[1265px] justify-center">
+          <LeftRail
+            status={filters.status}
+            counts={counts}
+            stats={stats}
+            theme={theme}
+            onStatusChange={setStatus}
+            onToggleTheme={toggleTheme}
+            onFocusComposer={focusComposer}
+            onOpenShortcuts={openShortcuts}
+          />
+
+          <main
+            id="main"
+            className="min-w-0 w-full max-w-[600px] flex-1 border-[#EFF3F4] pb-24 sm:border-x dark:border-[#2F3336]"
+          >
+            <Header
+              theme={theme}
               stats={stats}
-              tags={tags}
-              activeTag={filters.tag}
-              onTagChange={setTag}
-              onOpenShortcuts={openShortcuts}
-            />
-          </div>
-
-          <main id="main" className="min-w-0 space-y-4">
-            <TaskComposer inputRef={composerRef} onAdd={handleAdd} />
-
-            <FilterBar
               status={filters.status}
               counts={counts}
               onStatusChange={setStatus}
+              onToggleTheme={toggleTheme}
+              onOpenShortcuts={openShortcuts}
+            />
+
+            <FilterBar
               query={query}
               onQueryChange={setQuery}
-              searchRef={searchRef}
+              searchRef={mobileSearchRef}
               tags={tags}
               activeTag={filters.tag}
               onTagChange={setTag}
             />
 
-            <section aria-labelledby="list-title" className="glass rounded-3xl p-1.5 sm:p-2">
-              <div className="flex items-center justify-between px-3 pb-1 pt-2">
-                <h2 id="list-title" className="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-                  {STATUS_LABEL[filters.status]}
-                  {filters.tag && <span className="normal-case tracking-normal"> · #{filters.tag}</span>}
-                  <span className="ml-2 tabular-nums">{visible.length}</span>
-                </h2>
-                <div className="flex items-center gap-3">
-                  {visible.length > 1 && (
-                    <p className="hidden items-center gap-1 text-xs text-slate-500 sm:flex dark:text-slate-400">
-                      <GripVertical className="size-3.5" aria-hidden /> Drag to reorder
-                    </p>
-                  )}
-                  {stats.done > 0 && (
+            <TaskComposer inputRef={composerRef} onAdd={handleAdd} />
+
+            {(filters.tag || stats.done > 0) && (
+              <div
+                className={
+                  filters.tag
+                    ? 'flex items-center justify-between gap-2 border-b border-[#EFF3F4] px-4 py-2 text-[13px] dark:border-[#2F3336]'
+                    : 'flex items-center justify-end gap-2 border-b border-[#EFF3F4] px-4 py-2 text-[13px] lg:hidden dark:border-[#2F3336]'
+                }
+              >
+                {filters.tag ? (
+                  <div className="flex min-w-0 items-center gap-2 text-[#536471] dark:text-[#8B98A5]">
+                    <span className="truncate">
+                      Filtering by <span className="font-semibold text-[#096DAA] dark:text-[#1D9BF0]">#{filters.tag}</span>
+                    </span>
                     <button
                       type="button"
-                      onClick={handleClearCompleted}
-                      className="inline-flex items-center gap-1 rounded-lg px-2 py-1 text-xs font-medium text-slate-600 transition-colors hover:bg-rose-500/10 hover:text-rose-600 focus-ring dark:text-slate-300 dark:hover:text-rose-400"
+                      onClick={() => setTag(null)}
+                      aria-label={`Clear tag filter ${filters.tag}`}
+                      className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-semibold text-[#0F1419] transition-colors hover:bg-[#0F1419]/10 focus-ring dark:text-[#E7E9EA] dark:hover:bg-white/10"
                     >
-                      <Trash2 className="size-3.5" aria-hidden />
-                      Clear done
+                      <X className="size-3" aria-hidden />
+                      Clear
                     </button>
-                  )}
-                </div>
+                  </div>
+                ) : (
+                  <span />
+                )}
+
+                {stats.done > 0 && (
+                  <button
+                    type="button"
+                    onClick={handleClearCompleted}
+                    className="inline-flex shrink-0 items-center gap-1 rounded-full px-2.5 py-1 text-xs font-semibold text-[#C8102E] transition-colors hover:bg-[#F4212E]/10 focus-ring lg:hidden dark:text-[#FF6B74]"
+                  >
+                    <Trash2 className="size-3.5" aria-hidden />
+                    Clear done
+                  </button>
+                )}
               </div>
+            )}
+
+            <section aria-labelledby="list-title">
+              <h2 id="list-title" className="sr-only">
+                {STATUS_LABEL[filters.status]}
+                {filters.tag ? ` tagged ${filters.tag}` : ''} ({visible.length})
+              </h2>
               <TaskList
                 tasks={tasks}
                 visible={visible}
@@ -305,30 +347,27 @@ export default function App() {
                 onSave={handleSave}
                 onTagClick={handleTagClick}
               />
-              <AnimatePresence mode="wait" initial={false}>
-                {visible.length === 0 && <EmptyState key={emptyVariant} variant={emptyVariant} onAction={handleEmptyAction} />}
-              </AnimatePresence>
+              {visible.length === 0 && <EmptyState key={emptyVariant} variant={emptyVariant} onAction={handleEmptyAction} />}
             </section>
           </main>
+
+          <Sidebar
+            stats={stats}
+            tags={tags}
+            activeTag={filters.tag}
+            onTagChange={setTag}
+            query={query}
+            onQueryChange={setQuery}
+            searchRef={desktopSearchRef}
+            onClearCompleted={handleClearCompleted}
+          />
         </div>
 
-        <footer className="mt-10 flex flex-col items-center gap-2 text-center text-xs text-slate-500 sm:flex-row sm:justify-between dark:text-slate-400">
-          <p>Jarvis To-Do · Your tasks stay private, saved in this browser.</p>
-          <button
-            type="button"
-            onClick={openShortcuts}
-            className="inline-flex items-center gap-1.5 rounded-lg px-2 py-1 hover:text-slate-800 focus-ring dark:hover:text-slate-200"
-          >
-            Press <Kbd>?</Kbd> for keyboard shortcuts
-          </button>
-        </footer>
-      </div>
-
-      <UndoToast entry={undoEntry} onUndo={handleUndo} onDismiss={dismissUndo} />
-      <ShortcutsDialog open={shortcutsOpen} onClose={closeShortcuts} />
-      <div aria-live="polite" aria-atomic="true" className="sr-only">
-        {message}
-      </div>
+        <UndoToast entry={undoEntry} onUndo={handleUndo} onDismiss={dismissUndo} />
+        <ShortcutsDialog open={shortcutsOpen} onClose={closeShortcuts} />
+        <div aria-live="polite" aria-atomic="true" className="sr-only">
+          {message}
+        </div>
       </LazyMotion>
     </MotionConfig>
   );
